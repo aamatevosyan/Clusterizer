@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
@@ -33,6 +34,14 @@ namespace Clusterizer
         /// Стратегия обьеденения
         /// </summary>
         private ClusterDistance.Strategy _strategy;
+
+        public double maxIndex = 0;
+        public double maxCoeff = 0;
+        public double currentCoeff = 0;
+        public int totalCount = 0;
+
+        List<double> Indexes = new List<double>();
+        List<double> Coeffs = new List<double>();
         #endregion
 
         #region Конструктор        
@@ -48,6 +57,7 @@ namespace Clusterizer
             _patternMatrix = patternMatrix;
             this._distanceMetric = distanceMetric;
             this._strategy = strategy;
+            Coeffs = new List<double>();
         }
         #endregion
 
@@ -75,31 +85,7 @@ namespace Clusterizer
                     _dissimilarityMatrix.AddClusterPairAndDistance(clusterPair, distanceBetweenTwoClusters);
                 }
             }
-
-            //Parallel.ForEach(_ClusterPairCollection(), clusterPair =>
-            //{
-            //    distanceBetweenTwoClusters = ClusterDistance.ComputeDistance(clusterPair.Cluster1, clusterPair.Cluster2, distanceMetric);
-            //    _dissimilarityMatrix.AddClusterPairAndDistance(clusterPair, distanceBetweenTwoClusters);
-            //});
         }
-
-        //private IEnumerable<ClusterPair> _ClusterPairCollection()
-        //{
-        //    ClusterPair clusterPair;
-
-        //    for (int i = 0; i < _clusters.Count - 1; i++)
-        //    {
-        //        for (int j = i + 1; j < _clusters.Count; j++)
-        //        {
-        //            clusterPair = new ClusterPair();
-        //            clusterPair.Cluster1 = _clusters.GetCluster(i);
-        //            clusterPair.Cluster2 = _clusters.GetCluster(j);
-
-        //            yield return clusterPair;
-        //        }
-        //    }
-
-        //}
 
         /// <summary>
         /// Создает список класстеров
@@ -107,6 +93,7 @@ namespace Clusterizer
         private void _BuildSingletonCluster()
         {
             _clusters.BuildSingletonCluster(_patternMatrix);
+            totalCount = _clusters.Count;
         }
 
 
@@ -148,7 +135,7 @@ namespace Clusterizer
         /// </summary>
         /// <param name="indexNewCluster">Индекс нового кластера</param>
         /// <param name="k">Число выходных кластеров</param>
-        private void BuildHierarchicalClustering(int indexNewCluster, int k)
+        private void BuildHierarchicalClustering(int indexNewCluster, int k, bool isWithIndex = false)
         {
 
             ClusterPair closestClusterPair = this._GetClosestClusterPairInDissimilarityMatrix();
@@ -159,6 +146,7 @@ namespace Clusterizer
             newCluster.AddSubCluster(closestClusterPair.Cluster2);
             newCluster.Id = indexNewCluster;
             newCluster.UpdateTotalQuantityOfPatterns(); // Обновляет количество паттернов после обьеденения
+            newCluster.SetCentroid();
      
             // Удаляет пару кластеров из матризы различии
             _clusters.RemoveClusterPair(closestClusterPair);
@@ -167,9 +155,17 @@ namespace Clusterizer
             _clusters.AddCluster(newCluster);
             //closestClusterPair = null;
 
+            if (isWithIndex)
+            {
+                currentCoeff = GetIndexV2();
+                Coeffs.Add(currentCoeff);
+                Indexes.Add(_clusters._clusters.Count);
+                Debug.WriteLine($"Index: {_clusters._clusters.Count}, Coeff: {currentCoeff}");
+            }
+
             // Остановка алгоритма (если выходное число кластеров равно k
             if (_clusters.Count > k)
-                this.BuildHierarchicalClustering(indexNewCluster + 1, k);
+                this.BuildHierarchicalClustering(indexNewCluster + 1, k, isWithIndex);
         }
 
 
@@ -178,7 +174,7 @@ namespace Clusterizer
         /// </summary>
         /// <param name="k">Число выходных кластеров</param>
         /// <returns></returns>
-        public Clusters ExecuteClustering(int k)
+        public Clusters ExecuteClustering(int k, bool isWithIndex = false)
         {
 
             // Шаг 1
@@ -191,9 +187,115 @@ namespace Clusterizer
 
             // Шаг 3
             // Выполняем кластеризацию 
-            this.BuildHierarchicalClustering(_clusters.Count, k);
+            this.BuildHierarchicalClustering(_clusters.Count, k, isWithIndex);
 
             return _clusters; // Возвращаем кластер
+        }
+
+        public double GetIndex()
+        {
+    
+            int numberOfElements = 0;
+            int numberOfClusters = _clusters.Count;
+            Cluster overralCluster = new Cluster();
+
+            foreach (var cluster in _clusters._clusters)
+            {
+                overralCluster.AddSubCluster(cluster);
+            }
+            overralCluster.UpdateTotalQuantityOfPatterns();
+            overralCluster.GetAllPatterns();
+            overralCluster.SetCentroid();
+            numberOfElements = overralCluster.TotalQuantityOfPatterns;
+            if (_clusters._clusters.Count < 2)
+                return double.NaN;
+
+            double withinSumOfSquares = 0;
+            double betweenSumOfSquares = 0;
+
+            foreach (var cluster in _clusters._clusters)
+            {
+                withinSumOfSquares += cluster.getSumOfSquaredError(_distanceMetric);
+                betweenSumOfSquares += (cluster.TotalQuantityOfPatterns) *
+                                       Math.Pow(Distance.GetDistance(overralCluster._centroid, cluster._centroid, _distanceMetric), 2);
+            }
+
+            if (double.IsInfinity(betweenSumOfSquares / withinSumOfSquares))
+                return double.NaN;
+
+            return (betweenSumOfSquares / withinSumOfSquares / (numberOfClusters - 1)) *
+                         (numberOfElements - numberOfClusters);
+        }
+
+        public double GetIndexV2()
+        {
+            var flatClusters = BuildFlatClustersFromHierarchicalClustering(_clusters, _clusters.Count);
+            int numberOfElements = totalCount;
+            int numberOfClusters = _clusters.Count;
+            Cluster overralCluster = new Cluster();
+
+            foreach (var cluster in flatClusters)
+            {
+                overralCluster.AddSubCluster(cluster);
+            }
+
+            overralCluster.GetAllPatterns();
+            overralCluster.UpdateTotalQuantityOfPatterns();
+            overralCluster.SetCentroid();
+            numberOfElements = overralCluster.TotalQuantityOfPatterns;
+
+            if (flatClusters.Length < 2)
+                return double.NaN;
+
+            double withinSumOfSquares = 0;
+            double betweenSumOfSquares = 0;
+
+            foreach (var cluster in flatClusters)
+            {
+                withinSumOfSquares += cluster.getSumOfSquaredError(_distanceMetric);
+                betweenSumOfSquares += Math.Pow(Distance.GetDistance(overralCluster._centroid, cluster._centroid, _distanceMetric), 2);
+            }
+
+            if (double.IsInfinity(betweenSumOfSquares / withinSumOfSquares))
+                return double.NaN;
+
+            return Math.Abs(withinSumOfSquares) < double.Epsilon
+                ? double.NaN
+                : (betweenSumOfSquares / withinSumOfSquares / (numberOfClusters - 1)) *
+                  (numberOfElements - numberOfClusters);
+        }
+
+        // this method transform a hierarchical clustering into a partional clustering with k clusters. (this is necessary if we want to compare AGNES and K-Means results)
+        public Cluster[] BuildFlatClustersFromHierarchicalClustering(Clusters clusters, int k)
+        {
+            Cluster[] flatClusters = new Cluster[k];
+            for (int i = 0; i < k; i++)
+            {
+                flatClusters[i] = new Cluster();
+                flatClusters[i].Id = i;
+                flatClusters[i].UpdateTotalQuantityOfPatterns();
+                foreach (Pattern pattern in clusters.GetCluster(i).GetAllPatterns()) {
+                    flatClusters[i].AddPattern(pattern);
+                    flatClusters[i].TotalQuantityOfPatterns++;
+                }
+                flatClusters[i].SetCentroid();
+            }
+
+            return flatClusters;
+        }
+
+        public int GetMaximumIndex()
+        {
+            for (int i = 1; i < Coeffs.Count - 1; i++)
+            {
+                if (Coeffs[i] > Coeffs[i - 1] && Coeffs[i] > Coeffs[i + 1] && Coeffs[i] > maxCoeff)
+                {
+                    maxCoeff = Coeffs[i];
+                    maxIndex = Indexes[i];
+                }
+            }
+
+            return (int)maxIndex;
         }
         #endregion
     }

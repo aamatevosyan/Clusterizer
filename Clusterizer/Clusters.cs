@@ -16,7 +16,7 @@ namespace Clusterizer
         /// <summary>
         /// Множество кластеров
         /// </summary>
-        private HashSet<Cluster> _clusters;
+        public HashSet<Cluster> _clusters;
         #endregion
 
         #region Свойства        
@@ -71,7 +71,7 @@ namespace Clusterizer
         /// </summary>
         public Cluster[] GetClusters()
         {
-            return _clusters.ToArray<Cluster>();
+            return _clusters.ToArray();
         }
 
         /// <summary>
@@ -89,7 +89,9 @@ namespace Clusterizer
                 cluster.Id = clusterId;
                 cluster.AddPattern(item);
                 cluster.TotalQuantityOfPatterns = 1;
+                cluster.SetCentroid();
                 _clusters.Add(cluster);
+
                 clusterId++;
             }
         }

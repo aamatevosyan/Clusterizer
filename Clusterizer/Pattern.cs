@@ -42,10 +42,11 @@ namespace Clusterizer
         /// Id паттерна
         /// </summary>
         public int Id { get; set; }
+
         /// <summary>
         /// Количество точек
         /// </summary>
-        public int Count { get; set; }
+        public int Count => _points.Count;
         #endregion
 
         #region Методы        

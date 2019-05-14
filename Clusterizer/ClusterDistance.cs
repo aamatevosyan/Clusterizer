@@ -14,7 +14,9 @@
             SingleLinkage, // Одиночная связь (расстояния ближайшего соседа)
             CompleteLinkage, // Полная связь (расстояние наиболее удаленных соседей)
             AverageLinkageWPGMA, // Невзвешенное попарное среднее
-            AverageLinkageUPGMA // Взвешенное попарное среднее
+            AverageLinkageUPGMA, // Взвешенное попарное среднее
+            CentroidLinkage, // Растояние центроидов
+            MinimalSOELinkage // Метод минимальным сумм квадратов
         }
         #endregion
 
@@ -59,6 +61,24 @@
                 case Strategy.AverageLinkageWPGMA: distance = (distance1 + distance2) / 2; break;
                 case Strategy.AverageLinkageUPGMA:
                     distance = ((cluster2.GetSubCluster(0).TotalQuantityOfPatterns * distance1) / cluster2.TotalQuantityOfPatterns) + ((cluster2.GetSubCluster(1).TotalQuantityOfPatterns * distance2) / cluster2.TotalQuantityOfPatterns);
+                    break;
+                case Strategy.CentroidLinkage:
+                    cluster1.GetAllPatterns();
+                    cluster2.GetAllPatterns();
+                    cluster1.SetCentroid();
+                    cluster2.SetCentroid();
+                    distance = Distance.GetDistance(cluster1._centroid, cluster2._centroid,
+                        Distance.DistanceMetric.SquareEuclidianDistance);
+                    break;
+                case Strategy.MinimalSOELinkage:
+
+                    Cluster newCluster = new Cluster();
+                    newCluster.AddSubCluster(cluster1);
+                    newCluster.AddSubCluster(cluster2);
+                    newCluster.GetAllPatterns();
+                    newCluster.SetCentroid();
+
+                    distance = newCluster.getSumOfSquaredError(Distance.DistanceMetric.EuclidianDistance) - cluster1.getSumOfSquaredError(Distance.DistanceMetric.EuclidianDistance) - cluster2.getSumOfSquaredError(Distance.DistanceMetric.EuclidianDistance);
                     break;
             }
 

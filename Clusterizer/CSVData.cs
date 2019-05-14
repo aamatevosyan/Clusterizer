@@ -75,14 +75,15 @@ namespace Clusterizer
         /// </summary>
         public void SetPointsHeadings()
         {
-            List<string> points = new List<string>();
-            for (int i = 0; i < IsRealValue.Length; i++)
-            {
-                if (IsRealValue[i])
-                    points.Add(Headings[i]);
-            }
+            //List<string> points = new List<string>();
+            //for (int i = 0; i < IsRealValue.Length; i++)
+            //{
+            //    if (IsRealValue[i])
+            //        points.Add(Headings[i]);
+            //}
 
-            NumericHeadings = points.ToArray();
+            //NumericHeadings = points.ToArray();
+            NumericHeadings = Tools.DataPointsNames;
         }
 
         /// <summary>
@@ -90,11 +91,12 @@ namespace Clusterizer
         /// </summary>
         public void SetNamedHeadings()
         {
-            List<string> list = new List<string>();
-            for (int i = 0; i < Headings.Length; i++)
-                if (!IsRealValue[i])
-                    list.Add(Headings[i]);
-            StringHeadings = list.ToArray();
+            //List<string> list = new List<string>();
+            //for (int i = 0; i < Headings.Length; i++)
+            //    if (!IsRealValue[i])
+            //        list.Add(Headings[i]);
+            //StringHeadings = list.ToArray();
+            StringHeadings = Tools.AdditionalDataNames;
         }
 
         /// <summary>
@@ -137,6 +139,7 @@ namespace Clusterizer
         {
             var headings = line.Split(new char[] {';'}, StringSplitOptions.RemoveEmptyEntries).Select(x => x.Trim(new char[] {' ', '\"'})).ToArray();
             Headings = headings;
+
         }
 
         /// <summary>
@@ -285,9 +288,12 @@ namespace Clusterizer
             using (FileStream fileStream = new FileStream(filePath, FileMode.Open))
             {
                 data.FilePath = filePath;
+                data.IsRealValue = Tools.isDataPoint;
                 StreamReader streamReader = new StreamReader(fileStream);
+
+                //data.SetHeadingsFromLine(streamReader.ReadLine());
+                data.Headings = Tools.Headings;
                 string line;
-                data.SetHeadingsFromLine(streamReader.ReadLine());
                 while ((line = streamReader.ReadLine()) != null && line != "")
                 {
                     data.Rows.Add(data.GetRowFromLine(line));

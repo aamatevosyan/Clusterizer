@@ -34,6 +34,7 @@
             // 
             // drawingArea
             // 
+            this.drawingArea.BackColor = System.Drawing.SystemColors.Control;
             this.drawingArea.Location = new System.Drawing.Point(0, 0);
             this.drawingArea.Name = "drawingArea";
             this.drawingArea.Size = new System.Drawing.Size(872, 607);

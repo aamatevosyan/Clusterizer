@@ -56,6 +56,16 @@ namespace Clusterizer
         /// Ширина
         /// </summary>
         private int width;
+
+        private List<Node<string>> rootList;
+        private List<int> leavesList;
+        private List<int> levelsList;
+        private List<Color> colors;
+
+        private int maxLevel;
+        private Color color;
+
+        static Random random = new Random();
         #endregion
 
         #region Константы        
@@ -85,6 +95,10 @@ namespace Clusterizer
         {
             InitializeComponent();
             drawarea = drawingArea.CreateGraphics();
+            rootList = new List<Node<string>>();
+            leavesList = new List<int>();
+            levelsList = new List<int>();
+            colors = new List<Color>();
         }
         #endregion
 
@@ -215,10 +229,39 @@ namespace Clusterizer
                 return;
             }
 
-            root = BuildDendrogram(_clusters.GetClusters());
+           
 
-            leaves = CountLeaves(root); 
-            levels = CountLevels(root);
+            for (int i = 0; i < _clusters._clusters.Count; i++)
+            {
+                root = BuildDendrogram(new Cluster[] { _clusters._clusters.ElementAt(i) });
+
+                //if (root == null)
+                //{
+                //    root = GetNodeFromCluster(_clusters.GetCluster(i));
+                //}
+
+                if (_clusters.GetCluster(i).QuantityOfSubClusters == 0)
+                    root = GetNodeFromCluster(_clusters.GetCluster(i));
+
+                rootList.Add(root);
+
+                leaves = CountLeaves(root);
+                levels = CountLevels(root);
+
+                if (levels > maxLevel)
+                    maxLevel = levels;
+
+                levelsList.Add(levels);
+                leavesList.Add(leaves);
+
+                Random rand = random;
+                int max = byte.MaxValue + 1; // 256
+                int r = rand.Next(max);
+                int g = rand.Next(max);
+                int b = rand.Next(max);
+                Color c = Color.FromArgb(r, g, b);
+                colors.Add(c);
+            }
         }
 
         /// <summary>
@@ -230,9 +273,24 @@ namespace Clusterizer
             this.drawingArea.Size = new Size(width, height);
             currentY = 0;
             drawarea = e.Graphics;
-
             drawarea.TranslateTransform(DrawingAreaMargin, DrawingAreaMargin);
-            draw(drawarea, root, 0);
+
+            for (int i = 0; i < _clusters._clusters.Count; i++)
+            {
+                root = rootList[i];
+                levels = levelsList[i];
+                leaves = leavesList[i];
+                color = colors[i];
+
+                widthPerLevel = (width - ContestOffset - DrawingAreaMargin - DrawingAreaMargin) / maxLevel;
+
+                
+                draw(drawarea, root, currentY);
+            }
+
+
+            //drawarea.TranslateTransform(DrawingAreaMargin, DrawingAreaMargin);
+            //draw(drawarea, root, 0);
         }
 
         /// <summary>
@@ -245,12 +303,15 @@ namespace Clusterizer
         private Point draw(Graphics g, Node<string> node, int y)
         {
             List<Node<string>> children = node.ChildrenNodes;
+            Pen pen = new Pen(color);
+            SolidBrush brush = new SolidBrush(color);
 
             if (children.Count == 0)
             {
                 int x = Width - ContestOffset - widthPerLevel - 2 * DrawingAreaMargin;
 
-                g.DrawString(node.Contents, new Font("Times New Roman", 8.0f), Brushes.Black, x + 8, currentY - 8);
+                //g.DrawString(node.Contents, new Font("Times New Roman", 8.0f), Brushes.Black, x + 8, currentY - 8);
+                g.DrawString(node.Contents, new Font("Times New Roman", 8.0f), brush, x + 8, currentY - 8);
                 int resultX = x;
                 int resultY = currentY;
                 currentY += heightPerLeaf;
@@ -264,13 +325,18 @@ namespace Clusterizer
                 Point p0 = draw(g, child0, y);
                 Point p1 = draw(g, child1, y + heightPerLeaf);
 
-                g.FillRectangle(Brushes.Black, p0.X - 2, p0.Y - 2, 4, 4);
-                g.FillRectangle(Brushes.Black, p1.X - 2, p1.Y - 2, 4, 4);
+                g.FillRectangle(brush, p0.X - 2, p0.Y - 2, 4, 4);
+                g.FillRectangle(brush, p1.X - 2, p1.Y - 2, 4, 4);
 
                 int dx = widthPerLevel;
                 int vx = Math.Min(p0.X - dx, p1.X - dx);
 
-                Pen blackPen = new Pen(Color.Black);
+                //Pen blackPen = new Pen(Color.Black);
+                //g.DrawLine(blackPen, vx, p0.Y, p0.X, p0.Y);
+                //g.DrawLine(blackPen, vx, p1.Y, p1.X, p1.Y);
+                //g.DrawLine(blackPen, vx, p0.Y, vx, p1.Y);
+
+                Pen blackPen = pen;
                 g.DrawLine(blackPen, vx, p0.Y, p0.X, p0.Y);
                 g.DrawLine(blackPen, vx, p1.Y, p1.X, p1.Y);
                 g.DrawLine(blackPen, vx, p0.Y, vx, p1.Y);
@@ -300,8 +366,17 @@ namespace Clusterizer
         private void DendrogramFrm_SizeChanged(object sender, EventArgs e)
         {
             width = Width - DrawingAreaOffset;
-            widthPerLevel = (width - ContestOffset - DrawingAreaMargin - DrawingAreaMargin) / levels;
-            height = (heightPerLeaf * leaves) + 2 * DrawingAreaMargin + 50;
+            height = 0;
+
+            for (int i = 0; i < levelsList.Count; i++)
+            {
+                height += (heightPerLeaf * leavesList[i]);
+            }
+
+            height += 2 * DrawingAreaMargin + 50;
+
+            widthPerLevel = (width - ContestOffset - DrawingAreaMargin - DrawingAreaMargin) / maxLevel;
+
             drawingArea.Invalidate();
         }
 
@@ -314,10 +389,10 @@ namespace Clusterizer
         {
             if (e.KeyCode == Keys.S && e.Control)
             {
-                Graphics g = drawingArea.CreateGraphics();
+                Graphics g = drawarea;
                 Bitmap bmp = new Bitmap(drawingArea.Width, drawingArea.Height);
                 drawingArea.DrawToBitmap(bmp, new Rectangle(0, 0, drawingArea.Width, drawingArea.Height));
-                
+
                 SaveFileDialog saveFileDialog = new SaveFileDialog();
                 saveFileDialog.Filter = "PNG File(*.png)|*.png"; ;
                 saveFileDialog.Title = "Сохранить дендограмму...";

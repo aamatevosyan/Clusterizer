@@ -1,0 +1,211 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Class Name="Clusterizer.AboutBox" Collapsed="true">
+    <Position X="0.5" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>kIAAAAgAACAgCAUAAACAAAADAAAAEIAAAAAAAAAAAAA=</HashCode>
+      <FileName>AboutBox.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Clusterizer.Agnes" Collapsed="true">
+    <Position X="2.25" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>QgQIAgAIAAAIAAAQCAQEAiEACgAAAAAAAAAAQAAgBAg=</HashCode>
+      <FileName>Agnes.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Clusterizer.Cluster" Collapsed="true">
+    <Position X="4" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AEDDgAAAAYoAkBBAEAAAAAAAAAAAAAAAQAABAAIAAAI=</HashCode>
+      <FileName>Cluster.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Clusterizer.ClusterDistance" Collapsed="true">
+    <Position X="5.75" Y="0.5" Width="1.5" />
+    <NestedTypes>
+      <Enum Name="Clusterizer.ClusterDistance.Strategy" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>ClusterDistance.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Enum>
+    </NestedTypes>
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAABAAAAAAAAAAAAIAAAAAAAAAgA=</HashCode>
+      <FileName>ClusterDistance.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Clusterizer.ClusterizeForm" Collapsed="true">
+    <Position X="7.5" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>EgAEAAAABKAggBAQAACAAAASIAAYABAgkEAAAgAAAAA=</HashCode>
+      <FileName>ClusterizeForm.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Clusterizer.ClusterPair" Collapsed="true">
+    <Position X="0.5" Y="1.5" Width="1.5" />
+    <NestedTypes>
+      <Class Name="Clusterizer.ClusterPair.EqualityComparer" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>ClusterPair.cs</NewMemberFileName>
+        </TypeIdentifier>
+        <Lollipop Position="0.2" />
+      </Class>
+    </NestedTypes>
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAACAAAAAAACAAAAAAABAA=</HashCode>
+      <FileName>ClusterPair.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Clusterizer.Clusters" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="2.25" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAECAAAAgAAAABIgAAAAAAUACAAAAAAAAAAAAAQAAAA=</HashCode>
+      <FileName>Clusters.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="Clusterizer.ColorGenerator" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="4" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAACAAAAAABAAAAAAAAAEAAAAAAAAACA=</HashCode>
+      <FileName>ColorGenerator.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="Clusterizer.CSFContainer" Collapsed="true">
+    <Position X="5.75" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAACAAAAAAAAA=</HashCode>
+      <FileName>CSFContainer.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Clusterizer.CSVData" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="7.5" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>gAQAAAoSECAAAMAACEgQAAAAgJAEAAAAAoBBAEEAATA=</HashCode>
+      <FileName>CSVData.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="Clusterizer.CSVRow" Collapsed="true">
+    <Position X="0.5" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAA=</HashCode>
+      <FileName>CSVRow.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Clusterizer.DendrogramForm" Collapsed="true">
+    <Position X="2.25" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>BEAAAgAACCAYBAQAQCOgAAICCAFEAECBQAQAUQAAAAA=</HashCode>
+      <FileName>DendogramForm.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Clusterizer.DissimilarityMatrix" Collapsed="true">
+    <Position X="4" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AACAAAAAAAAAAAqAAAAAAAAAAAAAAAAAACBAAAAABAA=</HashCode>
+      <FileName>DissimilarityMatrix.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Clusterizer.Distance" Collapsed="true">
+    <Position X="5.75" Y="2.5" Width="1.5" />
+    <NestedTypes>
+      <Enum Name="Clusterizer.Distance.DistanceMetric" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>Distance.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Enum>
+    </NestedTypes>
+    <TypeIdentifier>
+      <HashCode>AAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Distance.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Clusterizer.MainForm" Collapsed="true">
+    <Position X="0.5" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>HoCEB70gBDIQQEEAAiCygABCCIpCWRAAAooQigFEEAI=</HashCode>
+      <FileName>MainForm.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Clusterizer.Node&lt;T&gt;" Collapsed="true">
+    <Position X="2.25" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAA=</HashCode>
+      <FileName>Node.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Clusterizer.OpenForm" Collapsed="true">
+    <Position X="4" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAACAAABBAAACAABACAABAAAAAIAAQABAACAA=</HashCode>
+      <FileName>OpenForm.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Clusterizer.Pattern" Collapsed="true">
+    <Position X="5.75" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAICIAAAAAAAAAAAgAAAAAQACAIAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Pattern.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Clusterizer.PatternMatrix" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="7.5" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAgABBAAEAAAAAQAAAAAAAAAAAAAAAAAAAI=</HashCode>
+      <FileName>PatternMatrix.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="Clusterizer.Program" Collapsed="true">
+    <Position X="0.5" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAA=</HashCode>
+      <FileName>Program.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Clusterizer.StatisticsForm" Collapsed="true">
+    <Position X="5.75" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AEAAAQCACCAAAAAAAACEAAACCAgAEACAAAAAAAAAAAA=</HashCode>
+      <FileName>StatisticsForm.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Clusterizer.DunnIndex" Collapsed="true">
+    <Position X="7.5" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAACAAAIAAAAAAAAAAAABIAAAAAAAAAAAAgA=</HashCode>
+      <FileName>TmpIndex.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Clusterizer.Tools" Collapsed="true">
+    <Position X="7.5" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>QACAAAQAAAAAEIECAAAAAAEAQQAAAAAAAAgRAACAAAA=</HashCode>
+      <FileName>Tools.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Clusterizer.Properties.Resources" Collapsed="true">
+    <Position X="2.25" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAIAACAYAAAAADAAABBEAAQAQAkAABAAAAAAhAAAoA=</HashCode>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Clusterizer.Properties.Settings" Collapsed="true">
+    <Position X="4" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAEAAAAIAAAAAABAAAAAAAAAAAACAA=</HashCode>
+      <FileName>Settings.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Struct Name="Clusterizer.StatisticPoint" Collapsed="true">
+    <Position X="0.5" Y="5.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAQAAAAAAAAAACAAAAAAAAABAAA=</HashCode>
+      <FileName>StatisticsForm.cs</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>

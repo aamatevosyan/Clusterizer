@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
@@ -7,8 +8,10 @@ using System.IO;
 using System.Linq;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using Clusterizer.Properties;
 
 namespace Clusterizer
 {
@@ -27,6 +30,8 @@ namespace Clusterizer
         /// Кластеры
         /// </summary>
         private Clusters _clusters;
+
+        private bool[] isChosen;
         #endregion
 
         #region Конструктор        
@@ -37,6 +42,8 @@ namespace Clusterizer
         {
             InitializeComponent();
             ResetComponents();
+            Settings.Default.Save();
+            Settings.Default.Upgrade();
         }
         #endregion
 
@@ -52,7 +59,7 @@ namespace Clusterizer
             filterToolStripComboBox.SelectedItem = null;
             sortToolStripComboBox.ComboBox.Items.Clear();
             sortToolStripComboBox.SelectedItem = null;
-            listBox1.Items.Clear();
+            //listBox1.Items.Clear();
             treeView.Nodes.Clear();
             DisableClustering();
         }
@@ -72,7 +79,12 @@ namespace Clusterizer
         public void LoadData()
         {
             ResetComponents();
+
+            dataGridView.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.None;
+            dataGridView.ColumnHeadersVisible = false;
             dataGridView.DataSource = _data.DataSetTable;
+            dataGridView.ColumnHeadersVisible = true;
+            dataGridView.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.AllCells;
             dataGridView.Refresh();
 
             filterToolStripComboBox.Items.AddRange(_data.StringHeadings);
@@ -97,9 +109,28 @@ namespace Clusterizer
         /// </summary>
         private void FillListBox()
         {
-            listBox1.Items.Clear();
-            for (int i = 0; i < _data.Rows.Count; i++)
-                listBox1.Items.Add($"Cluster{i} : \"{_data.Rows[i].Fields[0]}\"");
+            resultGridView.Rows.Clear();
+            resultGridView.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.None;
+            resultGridView.ColumnHeadersVisible = false;
+            for (int i = 0; i < _clusters._clusters.Count; i++)
+            {
+                int baseId = _clusters.GetCluster(i).Id;
+                foreach (var pattern in _clusters.GetCluster(i)._patternList)
+                {
+                    resultGridView.Rows.Add(_data.Rows[pattern.Id].Fields[0], $"Cluster{pattern.Id}",
+                        $"Cluster{baseId}");
+                }
+            }
+
+
+            //dataGridView.DataSource = _data.DataSetTable;
+            resultGridView.ColumnHeadersVisible = true;
+            resultGridView.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.AllCells;
+
+            resultGridView.Refresh();
+            //listBox1.Items.Clear();
+            //for (int i = 0; i < _data.Rows.Count; i++)
+            //    listBox1.Items.Add($"Cluster{i} : \"{_data.Rows[i].Fields[0]}\"");
         }
 
         /// <summary>
@@ -108,8 +139,12 @@ namespace Clusterizer
         private void BuildTreeView()
         {
             treeView.Nodes.Clear();
-            TreeNode rootNode = treeView.Nodes.Add($"Cluster{_clusters.GetClusters()[0].Id}");
-            this.AddNodes(_clusters.GetClusters()[0].GetSubClusters(), rootNode);
+            foreach (var cluster in _clusters._clusters)
+            {
+                TreeNode rootNode = treeView.Nodes.Add($"Cluster{cluster.Id}");
+                this.AddNodes(cluster.GetSubClusters(), rootNode);
+            }
+            
             treeView.ExpandAll();
         }
 
@@ -157,11 +192,39 @@ namespace Clusterizer
         /// <param name="e">Аргумент события <see cref="EventArgs"/></param>
         private void openToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            OpenForm openForm = new OpenForm();
-            openForm.ShowDialog();
-            _data = openForm.data;
-            if (_data != null)
-                LoadData();
+            //OpenForm openForm = new OpenForm();
+            //openForm.ShowDialog();
+            //_data = openForm.data;
+            //if (_data != null)
+            //    LoadData();
+            try
+            {
+
+                OpenFileDialog openFileDialog = new OpenFileDialog();
+                openFileDialog.Title = "Открыть файл";
+                openFileDialog.Filter = "CSV File(*.csv)|*.csv";
+                if (openFileDialog.ShowDialog() == DialogResult.OK)
+                {
+                    string filePath = openFileDialog.FileName;
+                    //filePathtextBox.Text = filePath;
+                    //var task = Task.Run(() =>
+                    //{
+                    //    _data = CSVData.ReadFromCSV(filePath);
+                    //});
+                    //task.Wait();
+                    _data = CSVData.ReadFromCSV(filePath);
+                    _data.SetPointsHeadings();
+                    _data.SetNamedHeadings();
+                    _data.CreateDataTable();
+                    LoadData();
+                }
+
+            }
+            catch
+            {
+                MessageBox.Show("Произошла ошибка при имспорте файла. Проверьте корректность файла.", "Ошибка импорта.", MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+            }
         }
 
         /// <summary>
@@ -234,13 +297,15 @@ namespace Clusterizer
             Cursor.Current = Cursors.WaitCursor;
 
             ClusterizeForm clusterizeForm = new ClusterizeForm(_data.NumericHeadings);
+            clusterizeForm._data = _data;
             clusterizeForm.ShowDialog();
 
             if (_data != null && clusterizeForm.isChosen != null)
             {
                 Agnes agnes = new Agnes(_data.GetPatternMatrix(clusterizeForm.isChosen),
                     clusterizeForm.distanceMetric, clusterizeForm.strategy);
-                _clusters = agnes.ExecuteClustering(1);
+                isChosen = clusterizeForm.isChosen;
+                _clusters = agnes.ExecuteClustering(clusterizeForm.k);
 
 
 
@@ -420,6 +485,25 @@ namespace Clusterizer
             AboutBox aboutBox = new AboutBox();
             aboutBox.ShowDialog();
         }
+
+
         #endregion
+
+        private void dataGridView_DataSourceChanged(object sender, EventArgs e)
+        {
+            //for (int i = 0; i < dataGridView.ColumnCount; i++)
+            //{
+            //    dataGridView.Columns[i].SortMode = DataGridViewColumnSortMode.NotSortable;
+            //}
+        }
+
+        private void показатьСтатисикуКласстераToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            StatisticsForm statisticsForm = new StatisticsForm();
+            statisticsForm.contentsHeadings = Tools.GetChosenDataPointNames(isChosen);
+            statisticsForm._clusters = _clusters;
+            statisticsForm.Setup();
+            statisticsForm.ShowDialog();
+        }
     }
 }

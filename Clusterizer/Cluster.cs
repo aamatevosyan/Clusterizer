@@ -22,7 +22,9 @@ namespace Clusterizer
         /// <summary>
         /// Список всех паттернов кластера и его детей
         /// </summary>
-        private List<Pattern> _patternList;
+        public List<Pattern> _patternList;
+
+        public Pattern _centroid;
         #endregion
 
         #region Свойства        
@@ -131,6 +133,8 @@ namespace Clusterizer
             else
                 foreach (Cluster subCluster in this.GetSubClusters())
                     _GetSubClusterPattern(subCluster);
+
+            TotalQuantityOfPatterns = _patternList.Count;
    
             return _patternList;
         }
@@ -146,6 +150,51 @@ namespace Clusterizer
             else
                 foreach (Cluster _subCluster in subCluster.GetSubClusters())
                     _GetSubClusterPattern(_subCluster);
+        }
+
+        public void SetCentroid()
+        {
+            double attributeSum = 0;
+            double attributeMean = 0;
+
+            Pattern newCentroid;
+            double[] tmpPoints;
+
+            _patternList = GetAllPatterns();
+            
+            int count = _patternList[0].Count;
+            tmpPoints = Enumerable.Repeat(0.0, count).ToArray();
+            foreach (var pattern in _patternList)
+            {
+
+                for (int i = 0; i < count; i++)
+                {
+                    tmpPoints[i] += pattern.GetPoint(i);
+                }
+            }
+
+            for (int i = 0; i < count; i++)
+            {
+                tmpPoints[i] /= TotalQuantityOfPatterns;
+            }
+
+            newCentroid = new Pattern(tmpPoints.ToList());
+            _centroid = newCentroid;
+        }
+
+        public double getSumOfSquaredError(Distance.DistanceMetric dm)
+        {
+            double squaredErrorSum = 0;
+            double distToCenter;
+
+            //distance of each element to clustercenter
+            foreach (var pattern in _patternList)
+            {
+                distToCenter = Distance.GetDistance(_centroid, pattern, dm);
+                squaredErrorSum += Math.Pow(distToCenter, 2);
+            }
+            return squaredErrorSum;
+
         }
 
         #endregion

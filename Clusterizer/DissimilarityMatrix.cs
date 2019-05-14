@@ -87,6 +87,30 @@ namespace Clusterizer
                 clusterPairDistance = _distanceMatrix[new ClusterPair(clusterPair.Cluster2, clusterPair.Cluster1)]; // Матрица симметричная но кластеры могут поменяться местами
             return clusterPairDistance;
         }
+
+        public double ReturnLowestDistanceOld()
+        {
+            var distanceList = _distanceMatrix.ToList();
+            distanceList.Sort((x, y) => x.Value.CompareTo(y.Value)); // it is necessary to find a more performatic way to find this value (very important)
+            return distanceList[0].Value;
+        }
+
+        // get the lowest distance in distance matrix
+        public double GetLowestDistance()
+        {
+            double minDistance = double.MaxValue;
+            ClusterPair closestClusterPair = new ClusterPair();
+
+            foreach (var item in _distanceMatrix)
+            {
+                if (item.Value < minDistance)
+                {
+                    minDistance = item.Value;
+                }
+            }
+
+            return minDistance;
+        }
         #endregion
     }
 }
