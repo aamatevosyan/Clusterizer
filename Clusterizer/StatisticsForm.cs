@@ -62,23 +62,42 @@ namespace Clusterizer
         /// </summary>
         private StatisticPoint[][] _contents;
 
+        /// <summary>
+        /// The default colors
+        /// </summary>
+        private Color[] _colors = new Color[]
+        {
+            Color.Aquamarine, Color.CornflowerBlue, Color.OrangeRed
+        };
+
         #endregion
 
+        #region Constructor                
+        /// <summary>
+        /// Initializes a new instance of the <see cref="StatisticsForm"/> class.
+        /// </summary>
         public StatisticsForm()
         {
             InitializeComponent();
         }
+        #endregion
 
+        #region Methods
+        /// <summary>
+        /// Setups this instance.
+        /// </summary>
         public void Setup()
         {
+            // creates data tables
             _dataTable = new DataTable();
+            // add columns to datatable
             _dataTable.Columns.Add("Название кластера");
-            foreach (var numericDataHeading in Tools.NumericDataHeadings)
-                _dataTable.Columns.Add(numericDataHeading);
-
+            for (int i = 0; i < Tools.NumericDataHeadings.Length; i++)
+                _dataTable.Columns.Add(Tools.NumericDataHeadings[i]);
             _dataTable.Columns.Add("Число обьектов");
             _contents = new StatisticPoint[contentsHeadings.Length][];
 
+            // fill data table
             for (int i = 0; i < Clusters.Count; i++)
             {
                 var list = Clusters.GetCluster(i).Centroid.Points.Select(x => $"{x}").ToList();
@@ -87,25 +106,25 @@ namespace Clusterizer
                 _dataTable.Rows.Add(list.ToArray());
             }
 
-
-
-
+            // init contents
             for (int j = 0; j < contentsHeadings.Length; j++)
             {
                 _contents[j] = new StatisticPoint[Clusters.Count];
             }
 
+            // gets contents
             for (int i = 0; i < Clusters.Count; i++)
             {
                 for (int j = 0; j < contentsHeadings.Length; j++)
                 {
-                    _contents[j][i] = new StatisticPoint
-                    {
-                        value = Clusters.GetCluster(i).Centroid[j], GroupId = 0, index = i
-                    };
+                    _contents[j][i] = new StatisticPoint();
+                    _contents[j][i].value = Clusters.GetCluster(i).Centroid[j];
+                    _contents[j][i].GroupId = 0;
+                    _contents[j][i].index = i;
                 }
             }
 
+            // group contents
             for (int j = 0; j < contentsHeadings.Length; j++)
             {
                 _contents[j] = _contents[j].OrderBy((x) => x.value).ToArray();
@@ -115,59 +134,20 @@ namespace Clusterizer
                     _contents[j][i].GroupId = indentifiers[i];
                 _contents[j] = _contents[j].OrderBy((x) => x.index).ToArray();
             }
-            
 
-            dataGridView1.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.None;
-            dataGridView1.ColumnHeadersVisible = false;
-            dataGridView1.DataSource = _dataTable;
-            dataGridView1.ColumnHeadersVisible = true;
-            dataGridView1.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.AllCells;
-            dataGridView1.Refresh();
+            // fill data gridview
+            clustersOverviewGridView.ColumnHeadersVisible = true;
+            clustersOverviewGridView.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.AllCells;
+            clustersOverviewGridView.DataSource = _dataTable;
         }
+        #endregion
 
-       
-
-
-
-        private void dataGridView1_DataBindingComplete(object sender, DataGridViewBindingCompleteEventArgs e)
-        {
-    
-            for (int i = 0; i < Clusters.Count; i++)
-            {
-                Debug.Write($"Index {i}: ");
-                for (int j = 0; j < contentsHeadings.Length; j++)
-                {
-                    Color color;
-                    if (_contents[j][i].GroupId == 1)
-                        color = Color.Aqua;
-                    else if (_contents[j][i].GroupId == 2)
-                        color = Color.AliceBlue;
-                    else
-                        color = Color.DarkCyan;
-                    Debug.Write($"{j}: {color.Name} ,");
-                    dataGridView1.Rows[i].Cells[j + 1].Style.BackColor = color;
-
-                }
-                Debug.WriteLine("");
-            }
-        }
-
-        private void dataGridView1_RowPostPaint(object sender, DataGridViewRowPostPaintEventArgs e)
-        {
-            using (SolidBrush b = new SolidBrush(dataGridView1.RowHeadersDefaultCellStyle.ForeColor))
-            {
-                e.Graphics.DrawString((e.RowIndex + 1).ToString(), e.InheritedRowStyle.Font, b, e.RowBounds.Location.X + 10, e.RowBounds.Location.Y + 4);
-            }
-        }
-
-        private void dataGridView1_DataSourceChanged(object sender, EventArgs e)
-        {
-            for (int i = 0; i < dataGridView1.ColumnCount; i++)
-            {
-                dataGridView1.Columns[i].SortMode = DataGridViewColumnSortMode.NotSortable;
-            }
-        }
-
+        #region Events        
+        /// <summary>
+        /// Handles the FormClosing event of the StatisticsForm control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="FormClosingEventArgs"/> instance containing the event data.</param>
         private void StatisticsForm_FormClosing(object sender, FormClosingEventArgs e)
         {
             using (FileStream fileStream = new FileStream("tmpOverview.csv", FileMode.Create))
@@ -182,5 +162,45 @@ namespace Clusterizer
                 streamWriter.Flush();
             }
         }
+
+        /// <summary>
+        /// Handles the Load event of the StatisticsForm control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
+        private void StatisticsForm_Load(object sender, EventArgs e)
+        {
+            for (int i = 0; i < Clusters.Count; i++)
+            for (int j = 0; j < contentsHeadings.Length; j++)
+                clustersOverviewGridView.Rows[i].Cells[j + 1].Style.BackColor = _colors[_contents[j][i].GroupId - 1];
+        }
+
+        /// <summary>
+        /// Handles the RowPostPaint event of the clustersOverviewGridView control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="DataGridViewRowPostPaintEventArgs"/> instance containing the event data.</param>
+        private void clustersOverviewGridView_RowPostPaint(object sender, DataGridViewRowPostPaintEventArgs e)
+        {
+            using (SolidBrush b = new SolidBrush(clustersOverviewGridView.RowHeadersDefaultCellStyle.ForeColor))
+            {
+                e.Graphics.DrawString((e.RowIndex + 1).ToString(), e.InheritedRowStyle.Font, b, e.RowBounds.Location.X + 10, e.RowBounds.Location.Y + 4);
+            }
+        }
+
+        /// <summary>
+        /// Handles the DataSourceChanged event of the clustersOverviewGridView control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
+        private void clustersOverviewGridView_DataSourceChanged(object sender, EventArgs e)
+        {
+            for (int i = 0; i < clustersOverviewGridView.ColumnCount; i++)
+            {
+                clustersOverviewGridView.Columns[i].SortMode = DataGridViewColumnSortMode.NotSortable;
+            }
+        }
+
+        #endregion
     }
 }

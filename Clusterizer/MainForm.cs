@@ -26,6 +26,11 @@ namespace Clusterizer
         /// The data points before normalization
         /// </summary>
         private List<DataPoint> _dataPointsBeforeNormalization;
+
+        /// <summary>
+        /// The statistics form
+        /// </summary>
+        private StatisticsForm statisticsForm;
         #endregion
 
 
@@ -417,6 +422,24 @@ namespace Clusterizer
                 buildDendrogramToolStripMenuItem.Enabled = true;
                 showClusterOverviewToolStripMenuItem.Enabled = true;
                 exportToolStripMenuItem.Enabled = true;
+
+                Task.Factory.StartNew(() =>
+                {
+                    // shows form
+                    statisticsForm = new StatisticsForm
+                    {
+                        contentsHeadings = Tools.Data.GetChosenDataPointNames(Tools.isChosen),
+                        Clusters = new ClusterSet
+                        {
+                            ClustersList = Tools.Clusters.ClustersList.GetRange(0, Tools.Clusters.Count)
+                        }
+                    };
+
+                    // setup form
+                    statisticsForm.Clusters.ClustersList.ForEach(RestoreClusterSet);
+                    statisticsForm.Setup();
+
+                });
             }
         }
 
@@ -451,19 +474,6 @@ namespace Clusterizer
 
             if (Tools.Clusters != null)
             {
-                // shows form
-                var statisticsForm = new StatisticsForm
-                {
-                    contentsHeadings = Tools.Data.GetChosenDataPointNames(Tools.isChosen),
-                    Clusters = new ClusterSet
-                    {
-                        ClustersList = Tools.Clusters.ClustersList.GetRange(0, Tools.Clusters.Count)
-                    }
-                };
-
-                // setup form
-                statisticsForm.Clusters.ClustersList.ForEach(RestoreClusterSet);
-                statisticsForm.Setup();
                 statisticsForm.ShowDialog();
                 exportClusterOverviewToolStripMenuItem.Enabled = true;
             }

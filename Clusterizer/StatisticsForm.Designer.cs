@@ -28,42 +28,44 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.dataGridView1 = new System.Windows.Forms.DataGridView();
-            ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
+            this.clustersOverviewGridView = new System.Windows.Forms.DataGridView();
+            ((System.ComponentModel.ISupportInitialize)(this.clustersOverviewGridView)).BeginInit();
             this.SuspendLayout();
             // 
-            // dataGridView1
+            // clustersOverviewGridView
             // 
-            this.dataGridView1.AllowUserToAddRows = false;
-            this.dataGridView1.AllowUserToDeleteRows = false;
-            this.dataGridView1.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.dataGridView1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.dataGridView1.Location = new System.Drawing.Point(0, 0);
-            this.dataGridView1.Name = "dataGridView1";
-            this.dataGridView1.ReadOnly = true;
-            this.dataGridView1.Size = new System.Drawing.Size(800, 450);
-            this.dataGridView1.TabIndex = 0;
-            this.dataGridView1.DataSourceChanged += new System.EventHandler(this.dataGridView1_DataSourceChanged);
-            this.dataGridView1.DataBindingComplete += new System.Windows.Forms.DataGridViewBindingCompleteEventHandler(this.dataGridView1_DataBindingComplete);
-            this.dataGridView1.RowPostPaint += new System.Windows.Forms.DataGridViewRowPostPaintEventHandler(this.dataGridView1_RowPostPaint);
+            this.clustersOverviewGridView.AllowUserToAddRows = false;
+            this.clustersOverviewGridView.AllowUserToDeleteRows = false;
+            this.clustersOverviewGridView.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.clustersOverviewGridView.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.clustersOverviewGridView.Location = new System.Drawing.Point(0, 0);
+            this.clustersOverviewGridView.Name = "clustersOverviewGridView";
+            this.clustersOverviewGridView.ReadOnly = true;
+            this.clustersOverviewGridView.Size = new System.Drawing.Size(800, 450);
+            this.clustersOverviewGridView.TabIndex = 0;
+            this.clustersOverviewGridView.DataSourceChanged += new System.EventHandler(this.clustersOverviewGridView_DataSourceChanged);
+            this.clustersOverviewGridView.RowPostPaint += new System.Windows.Forms.DataGridViewRowPostPaintEventHandler(this.clustersOverviewGridView_RowPostPaint);
             // 
             // StatisticsForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(800, 450);
-            this.Controls.Add(this.dataGridView1);
+            this.Controls.Add(this.clustersOverviewGridView);
             this.Name = "StatisticsForm";
-            this.Text = "StatisticsForm";
+            this.ShowIcon = false;
+            this.Text = "Статистика кластеров";
+            this.TopMost = true;
             this.WindowState = System.Windows.Forms.FormWindowState.Maximized;
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.StatisticsForm_FormClosing);
-            ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).EndInit();
+            this.Load += new System.EventHandler(this.StatisticsForm_Load);
+            ((System.ComponentModel.ISupportInitialize)(this.clustersOverviewGridView)).EndInit();
             this.ResumeLayout(false);
 
         }
 
         #endregion
 
-        private System.Windows.Forms.DataGridView dataGridView1;
+        private System.Windows.Forms.DataGridView clustersOverviewGridView;
     }
 }
