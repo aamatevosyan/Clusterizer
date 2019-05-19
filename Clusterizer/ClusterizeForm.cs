@@ -46,7 +46,7 @@ namespace Clusterizer
         /// <summary>
         /// Indicates if TreeView busy
         /// </summary>
-        private bool isTreeViewBusy;
+        private bool _isTreeViewBusy;
 
         #endregion
 
@@ -65,8 +65,7 @@ namespace Clusterizer
             // Loads Parameters from defined configuration
             for (int i = 0; i < Tools.GroupNames.Length; i++)
             {
-                TreeNode rootNode = new TreeNode(Tools.GroupNames[i]);
-                rootNode.Checked = true;
+                TreeNode rootNode = new TreeNode(Tools.GroupNames[i]) {Checked = true};
                 for (int j = 0; j < Tools.GroupItemsNames[i].Length; j++)
                 {
                     TreeNode node = new TreeNode(Tools.GroupItemsNames[i][j]);
@@ -102,23 +101,22 @@ namespace Clusterizer
             normalizeMethod = (NormalizeMethod) normalizeMethodSelectComboBox.SelectedIndex;
 
             // checks for correct cluster number
-            int tmp;
-            if (int.TryParse(clusterCountTextBox.Text, out tmp) && tmp > 0 && tmp < Tools.Data.Rows.Count)
+            if (int.TryParse(clusterCountTextBox.Text, out var tmp) && tmp > 0 && tmp < Tools.Data.Rows.Count)
                 countOfClusters = tmp;
             else
                 throw new CustomException("Введите правилное количество кластеров.", "Ошибка при вводе числа кластеров");
 
             // gets selected datapoints
-            var _isChosen = new bool[Tools.NumericDataHeadings.Length];
+            var isChosen = new bool[Tools.NumericDataHeadings.Length];
             bool isAllFalse = true;
             int ind = 0;
             for (int i = 0; i < pointsSelectTreeView.Nodes.Count; i++)
             {
                 for (int j = 0; j < pointsSelectTreeView.Nodes[i].Nodes.Count; j++)
                 {
-                    _isChosen[ind] = pointsSelectTreeView.Nodes[i].Nodes[j].Checked;
+                    isChosen[ind] = pointsSelectTreeView.Nodes[i].Nodes[j].Checked;
                     if (isAllFalse)
-                        isAllFalse = !_isChosen[ind];
+                        isAllFalse = !isChosen[ind];
                     ind++;
                 }
             }
@@ -127,9 +125,9 @@ namespace Clusterizer
             if (isAllFalse)
                 throw new CustomException("Не было выбрано не одного показателя.", "Ощибка при выборе показателей");
 
-            Tools.isChosen = _isChosen;
+            Tools.isChosen = isChosen;
             isParametersSelected = true;
-            this.Close();
+            Close();
         }
 
         /// <summary>
@@ -146,16 +144,16 @@ namespace Clusterizer
             normalizeMethod = (NormalizeMethod)normalizeMethodSelectComboBox.SelectedIndex;
 
             // gets selected datapoints
-            var _isChosen = new bool[Tools.NumericDataHeadings.Length];
+            var isChosen = new bool[Tools.NumericDataHeadings.Length];
             bool isAllFalse = true;
             int ind = 0;
             for (int i = 0; i < pointsSelectTreeView.Nodes.Count; i++)
             {
                 for (int j = 0; j < pointsSelectTreeView.Nodes[i].Nodes.Count; j++)
                 {
-                    _isChosen[ind] = pointsSelectTreeView.Nodes[i].Nodes[j].Checked;
+                    isChosen[ind] = pointsSelectTreeView.Nodes[i].Nodes[j].Checked;
                     if (isAllFalse)
-                        isAllFalse = !_isChosen[ind];
+                        isAllFalse = !isChosen[ind];
                     ind++;
                 }
             }
@@ -166,11 +164,11 @@ namespace Clusterizer
 
 
             // gets cluster set from data
-            var _clusters = Tools.Data.GetClusterSet(Tools.isChosen);
-            _clusters.Normalize(normalizeMethod);
+            var clusters = Tools.Data.GetClusterSet(Tools.isChosen);
+            clusters.Normalize(normalizeMethod);
 
             // executes clustering for determining recomended count of clusters
-            Agnes agnes = new Agnes(_clusters,
+            Agnes agnes = new Agnes(clusters,
                 distanceMetric, strategy);
             agnes.ExecuteClustering(2, true);
 
@@ -186,15 +184,15 @@ namespace Clusterizer
         /// <param name="e">The <see cref="TreeViewEventArgs"/> instance containing the event data.</param>
         private void pointsSelectTreeView_AfterCheck(object sender, TreeViewEventArgs e)
         {
-            if (isTreeViewBusy) return;
-            isTreeViewBusy = true;
+            if (_isTreeViewBusy) return;
+            _isTreeViewBusy = true;
             try
             {
-                checkNodes(e.Node, e.Node.Checked);
+                CheckNodes(e.Node, e.Node.Checked);
             }
             finally
             {
-                isTreeViewBusy = false;
+                _isTreeViewBusy = false;
             }
         }
         #endregion
@@ -205,12 +203,12 @@ namespace Clusterizer
         /// </summary>
         /// <param name="node">The node.</param>
         /// <param name="check">if set to <c>true</c> [check].</param>
-        private void checkNodes(TreeNode node, bool check)
+        private void CheckNodes(TreeNode node, bool check)
         {
             foreach (TreeNode child in node.Nodes)
             {
                 child.Checked = check;
-                checkNodes(child, check);
+                CheckNodes(child, check);
             }
         }
         #endregion

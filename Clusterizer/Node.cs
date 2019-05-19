@@ -47,9 +47,7 @@ namespace Clusterizer
         {
             Contents = default(T);
 
-            ChildrenNodes = new List<Node<T>>();
-            ChildrenNodes.Add(child0);
-            ChildrenNodes.Add(child1);
+            ChildrenNodes = new List<Node<T>> {child0, child1};
         }
     }
 }

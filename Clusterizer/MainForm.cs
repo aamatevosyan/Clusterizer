@@ -87,7 +87,7 @@ namespace Clusterizer
         private void RestoreClusterSet(Cluster cluster)
         {
             for (var i = 0; i < cluster.DataPoints.Count; i++)
-                cluster.DataPoints[i] = _dataPointsBeforeNormalization[cluster.DataPoints[i].ID];
+                cluster.DataPoints[i] = _dataPointsBeforeNormalization[cluster.DataPoints[i].Id];
 
             foreach (var subCluster in cluster.SubClusters)
                 RestoreClusterSet(subCluster);
@@ -153,13 +153,13 @@ namespace Clusterizer
                 // gets table from clusters
                 for (var i = 0; i < Tools.Clusters.ClustersList.Count; i++)
                 {
-                    var baseId = Tools.Clusters.GetCluster(i).ID;
+                    var baseId = Tools.Clusters.GetCluster(i).Id;
                     foreach (var pattern in Tools.Clusters.GetCluster(i).DataPoints)
                     {
-                        clusterTableGridView.Rows.Add(Tools.Data.Rows[pattern.ID].Fields[0], $"Cluster{pattern.ID}",
+                        clusterTableGridView.Rows.Add(Tools.Data.Rows[pattern.Id].Fields[0], $"Cluster{pattern.Id}",
                             $"Cluster{baseId}");
                         streamWriter.WriteLine(
-                            $"{Tools.Data.Rows[pattern.ID].Fields[0]};Cluster{pattern.ID};Cluster{baseId}");
+                            $"{Tools.Data.Rows[pattern.Id].Fields[0]};Cluster{pattern.Id};Cluster{baseId}");
                     }
                 }
 
@@ -182,7 +182,7 @@ namespace Clusterizer
             clusterTreeView.Nodes.Clear();
             foreach (var cluster in Tools.Clusters.ClustersList)
             {
-                var rootNode = clusterTreeView.Nodes.Add($"Cluster{cluster.ID}");
+                var rootNode = clusterTreeView.Nodes.Add($"Cluster{cluster.Id}");
                 AddNodes(cluster.SubClusters.ToArray(), rootNode);
             }
 
@@ -196,10 +196,9 @@ namespace Clusterizer
         /// <param name="node">The node.</param>
         private void AddNodes(Cluster[] clusters, TreeNode node)
         {
-            TreeNode childNode;
             foreach (var cluster in clusters)
             {
-                childNode = node.Nodes.Add($"Cluster{cluster.ID}");
+                var childNode = node.Nodes.Add($"Cluster{cluster.Id}");
                 if (cluster.QuantityOfSubClusters > 0)
                     AddNodes(cluster.SubClusters.ToArray(), childNode);
             }
@@ -245,16 +244,14 @@ namespace Clusterizer
         {
             try
             {
-                var openFileDialog = new OpenFileDialog();
-                openFileDialog.Title = "Открыть файл";
-                openFileDialog.Filter = "CSV File(*.csv)|*.csv";
+                var openFileDialog = new OpenFileDialog {Title = "Открыть файл", Filter = "CSV File(*.csv)|*.csv"};
                 // check if user clicked ok
                 if (openFileDialog.ShowDialog() == DialogResult.OK)
                 {
                     var filePath = openFileDialog.FileName;
-                    var _data = new CSVData(filePath);
-                    _data.CreateDataTable();
-                    Tools.Data = _data;
+                    var data = new CSVData(filePath);
+                    data.CreateDataTable();
+                    Tools.Data = data;
                     LoadData();
                 }
             }
@@ -279,7 +276,7 @@ namespace Clusterizer
                     // updates data
                     Tools.Data.UpdateRows();
                     // saves data
-                    CSVData.SaveToCSV(Tools.Data, Tools.Data.FilePath);
+                    CSVData.SaveToCsv(Tools.Data, Tools.Data.FilePath);
                 }
             }
             catch
@@ -298,9 +295,7 @@ namespace Clusterizer
         {
             try
             {
-                var saveFileDialog = new SaveFileDialog();
-                saveFileDialog.Title = "Сохранить как...";
-                saveFileDialog.Filter = "CSV File(*.csv)|*.csv";
+                var saveFileDialog = new SaveFileDialog {Title = "Сохранить как...", Filter = "CSV File(*.csv)|*.csv"};
                 // check if user selected ok
                 if (Tools.Data != null && saveFileDialog.ShowDialog() == DialogResult.OK)
                 {
@@ -308,7 +303,7 @@ namespace Clusterizer
                     // updates data
                     Tools.Data.UpdateRows();
                     // saves data
-                    CSVData.SaveToCSV(Tools.Data, filePath);
+                    CSVData.SaveToCsv(Tools.Data, filePath);
                 }
             }
             catch
@@ -347,9 +342,7 @@ namespace Clusterizer
         /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
         private void exportClusterDendogrammToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            var saveFileDialog = new SaveFileDialog();
-            saveFileDialog.Title = "Сохранить как...";
-            saveFileDialog.Filter = "PNG File(*.png)|*.png";
+            var saveFileDialog = new SaveFileDialog {Title = "Сохранить как...", Filter = "PNG File(*.png)|*.png"};
             if (saveFileDialog.ShowDialog() == DialogResult.OK) File.Move("tmpDendogramm.png", saveFileDialog.FileName);
         }
 
@@ -360,9 +353,7 @@ namespace Clusterizer
         /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
         private void exportClusterTableToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            var saveFileDialog = new SaveFileDialog();
-            saveFileDialog.Title = "Сохранить как...";
-            saveFileDialog.Filter = "CSV File(*.csv)|*.csv";
+            var saveFileDialog = new SaveFileDialog {Title = "Сохранить как...", Filter = "CSV File(*.csv)|*.csv"};
             if (saveFileDialog.ShowDialog() == DialogResult.OK) File.Move("tmpTable.csv", saveFileDialog.FileName);
         }
 
@@ -373,9 +364,7 @@ namespace Clusterizer
         /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
         private void exportClusterOverviewToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            var saveFileDialog = new SaveFileDialog();
-            saveFileDialog.Title = "Сохранить как...";
-            saveFileDialog.Filter = "CSV File(*.csv)|*.csv";
+            var saveFileDialog = new SaveFileDialog {Title = "Сохранить как...", Filter = "CSV File(*.csv)|*.csv"};
             if (saveFileDialog.ShowDialog() == DialogResult.OK) File.Move("tmpOverview.csv", saveFileDialog.FileName);
         }
 
@@ -399,21 +388,21 @@ namespace Clusterizer
                 Tools.Data.UpdateRows();
 
                 // get clusterset
-                var _clusters = Tools.Data.GetClusterSet(Tools.isChosen);
-                Tools.Clusters = _clusters;
+                var clusters = Tools.Data.GetClusterSet(Tools.isChosen);
+                Tools.Clusters = clusters;
 
                 // backups clusters before normalization
                 _dataPointsBeforeNormalization = new List<DataPoint>();
-                for (var i = 0; i < _clusters.ClustersList.Count; i++)
+                for (var i = 0; i < clusters.ClustersList.Count; i++)
                 {
                     _dataPointsBeforeNormalization.Add(
-                        new DataPoint(new List<double>(_clusters[i].DataPoints[0].Points)));
-                    _dataPointsBeforeNormalization[i].ID = i;
+                        new DataPoint(new List<double>(clusters[i].DataPoints[0].Points)));
+                    _dataPointsBeforeNormalization[i].Id = i;
                 }
 
                 // normalize clusters
-                _clusters.Normalize(clusterizeForm.normalizeMethod);
-                var agnes = new Agnes(_clusters,
+                clusters.Normalize(clusterizeForm.normalizeMethod);
+                var agnes = new Agnes(clusters,
                     clusterizeForm.distanceMetric, clusterizeForm.strategy);
 
                 // execute clustering
@@ -463,13 +452,17 @@ namespace Clusterizer
             if (Tools.Clusters != null)
             {
                 // shows form
-                var statisticsForm = new StatisticsForm();
+                var statisticsForm = new StatisticsForm
+                {
+                    contentsHeadings = Tools.Data.GetChosenDataPointNames(Tools.isChosen),
+                    Clusters = new ClusterSet
+                    {
+                        ClustersList = Tools.Clusters.ClustersList.GetRange(0, Tools.Clusters.Count)
+                    }
+                };
 
                 // setup form
-                statisticsForm.contentsHeadings = Tools.Data.GetChosenDataPointNames(Tools.isChosen);
-                statisticsForm._clusters = new ClusterSet();
-                statisticsForm._clusters.ClustersList = Tools.Clusters.ClustersList.GetRange(0, Tools.Clusters.Count);
-                statisticsForm._clusters.ClustersList.ForEach(x => RestoreClusterSet(x));
+                statisticsForm.Clusters.ClustersList.ForEach(RestoreClusterSet);
                 statisticsForm.Setup();
                 statisticsForm.ShowDialog();
                 exportClusterOverviewToolStripMenuItem.Enabled = true;

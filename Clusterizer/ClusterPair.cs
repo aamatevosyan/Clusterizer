@@ -22,15 +22,8 @@ namespace Clusterizer
         /// </exception>
         public ClusterPair(Cluster cluster1, Cluster cluster2)
         {
-
-            if (cluster1 == null)
-                throw new ArgumentNullException("cluster1");
-
-            if (cluster2 == null)
-                throw new ArgumentNullException("cluster2");
-
-            this.Cluster1 = cluster1;
-            this.Cluster2 = cluster2;
+            Cluster1 = cluster1 ?? throw new ArgumentNullException(nameof(cluster1));
+            Cluster2 = cluster2 ?? throw new ArgumentNullException(nameof(cluster2));
         }
         #endregion
 
@@ -72,7 +65,7 @@ namespace Clusterizer
             /// </returns>
             public bool Equals(ClusterPair x, ClusterPair y)
             {
-                return x.Cluster1.ID == y.Cluster1.ID && x.Cluster2.ID == y.Cluster2.ID;
+                return x.Cluster1.Id == y.Cluster1.Id && x.Cluster2.Id == y.Cluster2.Id;
             }
 
             /// <summary>
@@ -84,7 +77,7 @@ namespace Clusterizer
             /// </returns>
             public int GetHashCode(ClusterPair x)
             {
-                return x.Cluster1.ID ^ x.Cluster2.ID;
+                return x.Cluster1.Id ^ x.Cluster2.Id;
             }
         }
         #endregion

@@ -14,7 +14,7 @@ namespace Clusterizer
         /// <summary>
         /// The distance matrix
         /// </summary>
-        private Dictionary<ClusterPair, double> _distanceMatrix;
+        private readonly Dictionary<ClusterPair, double> _distanceMatrix;
         #endregion
 
         #region Constructor                
@@ -44,10 +44,9 @@ namespace Clusterizer
         /// <param name="clusterPair">The cluster pair.</param>
         public void RemoveClusterPair(ClusterPair clusterPair)
         {
-            if (_distanceMatrix.ContainsKey(clusterPair))
-                _distanceMatrix.Remove(clusterPair);
-            else
-                _distanceMatrix.Remove(new ClusterPair(clusterPair.Cluster2, clusterPair.Cluster1));
+            _distanceMatrix.Remove(_distanceMatrix.ContainsKey(clusterPair)
+                ? clusterPair
+                : new ClusterPair(clusterPair.Cluster2, clusterPair.Cluster1));
         }
 
         /// <summary>
@@ -79,12 +78,9 @@ namespace Clusterizer
         /// <returns></returns>
         public double ReturnClusterPairDistance(ClusterPair clusterPair)
         {
-            double clusterPairDistance = Double.MaxValue;
+            double clusterPairDistance;
 
-            if (_distanceMatrix.ContainsKey(clusterPair))
-                clusterPairDistance = _distanceMatrix[clusterPair];
-            else
-                clusterPairDistance = _distanceMatrix[new ClusterPair(clusterPair.Cluster2, clusterPair.Cluster1)]; // pairs can be swapped
+            clusterPairDistance = _distanceMatrix.ContainsKey(clusterPair) ? _distanceMatrix[clusterPair] : _distanceMatrix[new ClusterPair(clusterPair.Cluster2, clusterPair.Cluster1)];
             return clusterPairDistance;
         }
         #endregion

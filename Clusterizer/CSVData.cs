@@ -108,30 +108,26 @@ namespace Clusterizer
         /// <returns></returns>
         public ClusterSet GetClusterSet(bool[] isChosen)
         {
-            DataPoint _dataPoint;
-            Cluster _cluster;
-            var _clusterSet = new ClusterSet();
+            var clusterSet = new ClusterSet();
 
             // generates datapoint
             for (var i = 0; i < Rows.Count; i++)
             {
-                _dataPoint = new DataPoint();
-                _dataPoint.ID = i;
+                var dataPoint = new DataPoint {Id = i};
                 // gets all points of datapoint
                 for (var j = StringHeadings.Length; j < FieldsCount; j++)
-                    _dataPoint.Add(double.Parse(Rows[i][j]));
+                    dataPoint.Add(double.Parse(Rows[i][j]));
 
                 // new cluster
-                _cluster = new Cluster();
-                _cluster.ID = i;
-                _cluster.AddDataPoint(_dataPoint);
-                _cluster.SetCentroid();
+                var cluster = new Cluster {Id = i};
+                cluster.AddDataPoint(dataPoint);
+                cluster.SetCentroid();
 
                 // add to set
-                _clusterSet.AddCluster(_cluster);
+                clusterSet.AddCluster(cluster);
             }
 
-            return _clusterSet;
+            return clusterSet;
         }
 
         /// <summary>
@@ -157,7 +153,7 @@ namespace Clusterizer
         /// </summary>
         /// <param name="csvRow">The CSV row.</param>
         /// <returns></returns>
-        public string GetCSVLineFromRow(CSVRow csvRow)
+        public string GetCsvLineFromRow(CSVRow csvRow)
         {
             return string.Join(";", csvRow.Fields);
         }
@@ -168,10 +164,9 @@ namespace Clusterizer
         public void UpdateRows()
         {
             Rows.Clear();
-            List<string> fieldList;
             foreach (DataRow row in DataSetTable.Rows)
             {
-                fieldList = new List<string>();
+                var fieldList = new List<string>();
                 for (var i = 0; i < row.ItemArray.Length; i++)
                     fieldList.Add(row[i].ToString());
                 Rows.Add(new CSVRow(fieldList));
@@ -183,10 +178,11 @@ namespace Clusterizer
         /// </summary>
         public void CreateDataTableColumns()
         {
-            for (var i = 0; i < StringHeadings.Length; i++) DataSetTable.Columns.Add(StringHeadings[i], typeof(string));
+            foreach (var heading in StringHeadings)
+                DataSetTable.Columns.Add(heading, typeof(string));
 
-            for (var i = 0; i < NumericHeadings.Length; i++)
-                DataSetTable.Columns.Add(NumericHeadings[i], typeof(double));
+            foreach (var numericHeading in NumericHeadings)
+                DataSetTable.Columns.Add(numericHeading, typeof(double));
         }
 
         /// <summary>
@@ -227,12 +223,12 @@ namespace Clusterizer
         /// </summary>
         /// <param name="data">The data.</param>
         /// <param name="filePath">The file path.</param>
-        public static void SaveToCSV(CSVData data, string filePath)
+        public static void SaveToCsv(CSVData data, string filePath)
         {
             using (var fileStream = new FileStream(filePath, FileMode.Create))
             {
                 var streamWriter = new StreamWriter(fileStream);
-                foreach (var row in data.Rows) streamWriter.WriteLine(data.GetCSVLineFromRow(row));
+                foreach (var row in data.Rows) streamWriter.WriteLine(data.GetCsvLineFromRow(row));
                 streamWriter.Flush();
             }
         }
@@ -246,13 +242,7 @@ namespace Clusterizer
         public void Sort(int index, bool isAscending)
         {
             SaveToStack();
-            IEnumerable<CSVRow> sorted;
-            if (isAscending)
-                sorted = Rows.OrderBy(row => row.Fields[index]);
-            else
-            {
-                sorted = Rows.OrderByDescending(row => row.Fields[index]);
-            }
+            IEnumerable<CSVRow> sorted = isAscending ? Rows.OrderBy(row => row.Fields[index]) : Rows.OrderByDescending(row => row.Fields[index]);
 
             Rows = sorted.ToList();
             UpdateData();

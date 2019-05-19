@@ -34,9 +34,9 @@
         /// <returns>Distance between clusters</returns>
         public static double ComputeDistance(Cluster cluster1, Cluster cluster2, DissimilarityMatrix dissimilarityMatrix, MergeStrategy strategy)
         {
-            double distance1, distance2, distance = 0;
-            distance1 = dissimilarityMatrix.ReturnClusterPairDistance(new ClusterPair(cluster1, cluster2.GetSubCluster(0)));
-            distance2 = dissimilarityMatrix.ReturnClusterPairDistance(new ClusterPair(cluster1, cluster2.GetSubCluster(1)));
+            double distance = 0;
+            var distance1 = dissimilarityMatrix.ReturnClusterPairDistance(new ClusterPair(cluster1, cluster2.GetSubCluster(0)));
+            var distance2 = dissimilarityMatrix.ReturnClusterPairDistance(new ClusterPair(cluster1, cluster2.GetSubCluster(1)));
 
             // computes distance by using merge strategy
             switch (strategy)
@@ -47,10 +47,10 @@
                 case MergeStrategy.CompleteLinkage:
                     distance = _MaxValue(distance1, distance2); // Max(x, y)
                     break;
-                case MergeStrategy.AverageLinkageWPGMA:
+                case MergeStrategy.AverageLinkageWpgma:
                     distance = (distance1 + distance2) / 2; // Avg(x, y)
                     break;
-                case MergeStrategy.AverageLinkageUPGMA:
+                case MergeStrategy.AverageLinkageUpgma:
                     distance = ((cluster2.GetSubCluster(0).QuantityOfDataPoints * distance1) / cluster2.QuantityOfDataPoints) 
                                + ((cluster2.GetSubCluster(1).QuantityOfDataPoints * distance2) / cluster2.QuantityOfDataPoints); // WeightedAvg(x, y)
                     break;
@@ -109,8 +109,8 @@
     {
         SingleLinkage, // Single Linkage
         CompleteLinkage, // Complete Linkage
-        AverageLinkageWPGMA, // Average Linkage (WPGMA)
-        AverageLinkageUPGMA, // Average Linkage (UPGMA)
+        AverageLinkageWpgma, // Average Linkage (WPGMA)
+        AverageLinkageUpgma, // Average Linkage (UPGMA)
         CentroidMethod, // Centroid Method
         WardsMethod // Wards Method
     }

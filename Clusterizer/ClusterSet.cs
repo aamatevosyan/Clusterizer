@@ -76,10 +76,7 @@ namespace Clusterizer
         /// </value>
         /// <param name="index">The index.</param>
         /// <returns></returns>
-        public Cluster this[int index]
-        {
-            get { return ClustersList[index]; }
-        }
+        public Cluster this[int index] => ClustersList[index];
 
         /// <summary>
         /// Removes the cluster pair.

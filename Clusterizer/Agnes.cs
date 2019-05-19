@@ -17,7 +17,7 @@ namespace Clusterizer
         /// <summary>
         /// The clusters
         /// </summary>
-        private ClusterSet _clusters;
+        private readonly ClusterSet _clusters;
 
         /// <summary>
         /// The dissimilarity matrix
@@ -27,27 +27,27 @@ namespace Clusterizer
         /// <summary>
         /// The distance metric
         /// </summary>
-        private DistanceMetric _distanceMetric;
+        private readonly DistanceMetric _distanceMetric;
 
         /// <summary>
         /// The strategy
         /// </summary>
-        private MergeStrategy _strategy;
+        private readonly MergeStrategy _strategy;
 
         /// <summary>
         /// The initial number of clusters
         /// </summary>
-        private int initialNumberOfClusters;
+        private readonly int _initialNumberOfClusters;
 
         /// <summary>
         /// The list of indexes for selected CH value
         /// </summary>
-        private List<int> CH_Index;
+        private readonly List<int> _chIndex;
 
         /// <summary>
         /// The list of CH values
         /// </summary>
-        private List<double> CH_Value;
+        private readonly List<double> _chValue;
         #endregion
 
         #region Constructor            
@@ -59,16 +59,16 @@ namespace Clusterizer
         /// <param name="strategy">The strategy.</param>
         public Agnes(ClusterSet clusters, DistanceMetric distanceMetric, MergeStrategy strategy)
         {
-            this._clusters = clusters;
-            initialNumberOfClusters = clusters.Count;
-            this._distanceMetric = distanceMetric;
-            this._strategy = strategy;
+            _clusters = clusters;
+            _initialNumberOfClusters = clusters.Count;
+            _distanceMetric = distanceMetric;
+            _strategy = strategy;
 
             // creating initial dissimilarity matrix from _clusters
             BuildDissimilarityMatrix();
 
-            CH_Value = new List<double>();
-            CH_Index = new List<int>();
+            _chValue = new List<double>();
+            _chIndex = new List<int>();
         }
         #endregion
 
@@ -79,18 +79,15 @@ namespace Clusterizer
         /// </summary>
         private void BuildDissimilarityMatrix()
         {
-            double distanceBetweenTwoClusters;
             _dissimilarityMatrix = new DissimilarityMatrix();
-
-            ClusterPair clusterPair;
 
             for (int i = 0; i < _clusters.Count - 1; i++)
             {
                 for (int j = i + 1; j < _clusters.Count; j++)
                 {
-                    clusterPair = new ClusterPair(_clusters.GetCluster(i), _clusters.GetCluster(j)); // pair of clusters
+                    var clusterPair = new ClusterPair(_clusters.GetCluster(i), _clusters.GetCluster(j));
 
-                    distanceBetweenTwoClusters = ClusterDistance.ComputeDistance(clusterPair.Cluster1, clusterPair.Cluster2, _distanceMetric); // distance between clusters
+                    var distanceBetweenTwoClusters = ClusterDistance.ComputeDistance(clusterPair.Cluster1, clusterPair.Cluster2, _distanceMetric);
                     _dissimilarityMatrix.AddClusterPairAndDistance(clusterPair, distanceBetweenTwoClusters); // adds distance to matrix
                 }
             }
@@ -132,7 +129,7 @@ namespace Clusterizer
             Cluster newCluster = new Cluster();
             newCluster.AddSubCluster(closestClusterPair.Cluster1);
             newCluster.AddSubCluster(closestClusterPair.Cluster2);
-            newCluster.ID = indexNewCluster;
+            newCluster.Id = indexNewCluster;
             newCluster.SetCentroid();
      
             // removes cluster pair from _clusters
@@ -143,13 +140,13 @@ namespace Clusterizer
 
             if (isWithIndex) // checks is executed for calculating CH index
             {
-                CH_Value.Add(GetCHIndex()); // adds index to array of CH values
-                CH_Index.Add(_clusters.ClustersList.Count); // adds number of clusters for current CH value
+                _chValue.Add(GetCHIndex()); // adds index to array of CH values
+                _chIndex.Add(_clusters.ClustersList.Count); // adds number of clusters for current CH value
             }
 
             // exit point of algorithm (Where _clusters count is equal to k)
             if (_clusters.Count > k)
-                this.BuildHierarchicalClustering(indexNewCluster + 1, k, isWithIndex);
+                BuildHierarchicalClustering(indexNewCluster + 1, k, isWithIndex);
         }
 
         /// <summary>
@@ -195,7 +192,7 @@ namespace Clusterizer
             return Math.Abs(withinSumOfSquares) < double.Epsilon
                 ? double.NaN
                 : (betweenSumOfSquares / withinSumOfSquares / (currentNumberOfClusters - 1)) *
-                  (initialNumberOfClusters - currentNumberOfClusters);
+                  (_initialNumberOfClusters - currentNumberOfClusters);
         }
 
         /// <summary>
@@ -204,16 +201,16 @@ namespace Clusterizer
         /// <returns></returns>
         public int GetRecommendedCountOfClusters()
         {
-            int maxIndex = initialNumberOfClusters - 1; // index of Local Max CH
+            int maxIndex = _initialNumberOfClusters - 1; // index of Local Max CH
             double maxCoeff = 0; // local Max CH
             
             // finds local Max of CH Values
-            for (int i = 1; i < CH_Value.Count - 1; i++)
+            for (int i = 1; i < _chValue.Count - 1; i++)
             {
-                if (CH_Value[i] > CH_Value[i - 1] && CH_Value[i] > CH_Value[i + 1] && CH_Value[i] > maxCoeff)
+                if (_chValue[i] > _chValue[i - 1] && _chValue[i] > _chValue[i + 1] && _chValue[i] > maxCoeff)
                 {
-                    maxCoeff = CH_Value[i];
-                    maxIndex = CH_Index[i];
+                    maxCoeff = _chValue[i];
+                    maxIndex = _chIndex[i];
                 }
             }
 

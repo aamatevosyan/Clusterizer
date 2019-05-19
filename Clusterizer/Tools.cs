@@ -151,12 +151,12 @@ namespace Clusterizer
         static Tools()
         {
             // Generates group Items
-            var GroupCount = GroupNames.Length;
-            GroupItemsNames = new string[GroupCount][];
-            GroupItemsIndexes = new int[GroupCount][];
+            var groupCount = GroupNames.Length;
+            GroupItemsNames = new string[groupCount][];
+            GroupItemsIndexes = new int[groupCount][];
 
             var ind = 0;
-            for (var i = 0; i < GroupCount; i++)
+            for (var i = 0; i < groupCount; i++)
             {
                 var count = GroupItemsCount[i];
                 GroupItemsNames[i] = new string[count];
@@ -178,11 +178,11 @@ namespace Clusterizer
         /// <param name="arr">The arr.</param>
         public static void MinMaxNormalize(ref double[] arr)
         {
-            var _max = arr.Max();
-            var _min = arr.Min();
+            var max = arr.Max();
+            var min = arr.Min();
 
             for (var i = 0; i < arr.Length; i++)
-                arr[i] = (arr[i] - _min) / (_max - _min);
+                arr[i] = (arr[i] - min) / (max - min);
         }
 
         /// <summary>
@@ -191,14 +191,14 @@ namespace Clusterizer
         /// <param name="arr">The arr.</param>
         public static void ZScoreNormalize(ref double[] arr)
         {
-            var _mean = arr.Sum() / arr.Length;
-            double _bigSum = 0;
-            foreach (var d in arr) _bigSum += Math.Pow(d - _mean, 2);
+            var mean = arr.Sum() / arr.Length;
+            double bigSum = 0;
+            foreach (var d in arr) bigSum += Math.Pow(d - mean, 2);
 
-            var _standartDeviation = Math.Sqrt(_bigSum / (arr.Length - 1));
+            var standartDeviation = Math.Sqrt(bigSum / (arr.Length - 1));
 
             for (var i = 0; i < arr.Length; i++)
-                arr[i] = (arr[i] - _mean) / _standartDeviation;
+                arr[i] = (arr[i] - mean) / standartDeviation;
         }
 
         /// <summary>
@@ -208,11 +208,11 @@ namespace Clusterizer
         /// <returns>Standart deviation of given points</returns>
         public static double GetStandartDeviation(double[] points)
         {
-            var _max = points.Max();
-            var _min = points.Min();
-            var _avg = (_max + _min) / 2;
+            var max = points.Max();
+            var min = points.Min();
+            var avg = (max + min) / 2;
             double sum = 0;
-            foreach (var point in points) sum += Math.Pow(point - _avg, 2);
+            foreach (var point in points) sum += Math.Pow(point - avg, 2);
 
             return Math.Sqrt(sum / (points.Length - 1));
         }
@@ -229,8 +229,8 @@ namespace Clusterizer
             var newPoints = points;
             MinMaxNormalize(ref newPoints);
 
-            var _min = double.MaxValue;
-            int _mi = 1, _mj = newPoints.Length - 2;
+            var min = double.MaxValue;
+            int mi = 1, mj = newPoints.Length - 2;
 
             // custom cases
             if (points.Length == 1)
@@ -260,21 +260,21 @@ namespace Clusterizer
                         var three = newPoints.Slice(j, newPoints.Length);
 
                         // compute sum of standart deviations
-                        var _avg = GetStandartDeviation(one) + GetStandartDeviation(two) + GetStandartDeviation(three);
+                        var avg = GetStandartDeviation(one) + GetStandartDeviation(two) + GetStandartDeviation(three);
                         // get minimum one
-                        if (_avg < _min)
+                        if (avg < min)
                         {
-                            _min = _avg;
-                            _mi = i;
-                            _mj = j;
+                            min = avg;
+                            mi = i;
+                            mj = j;
                         }
                     }
 
                 // setting group ids
                 for (var i = 0; i < newPoints.Length; i++)
-                    if (i < _mi)
+                    if (i < mi)
                         groupIds[i] = 1;
-                    else if (i >= _mi && i < _mj)
+                    else if (i >= mi && i < mj)
                         groupIds[i] = 2;
                     else
                         groupIds[i] = 3;

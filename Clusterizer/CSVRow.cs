@@ -38,8 +38,8 @@ namespace Clusterizer
         /// <returns>Field with specified index.</returns>
         public string this[int index]
         {
-            get { return Fields[index]; }
-            set { Fields[index] = value; }
+            get => Fields[index];
+            set => Fields[index] = value;
         }
     }
 }

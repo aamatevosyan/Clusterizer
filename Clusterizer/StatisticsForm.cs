@@ -22,7 +22,7 @@ namespace Clusterizer
         /// <summary>
         /// The group identifier
         /// </summary>
-        public int groupID;
+        public int GroupId;
 
         /// <summary>
         /// The value
@@ -45,7 +45,7 @@ namespace Clusterizer
         /// <summary>
         /// The clusters
         /// </summary>
-        internal ClusterSet _clusters;
+        internal ClusterSet Clusters;
 
         /// <summary>
         /// The contents headings
@@ -60,12 +60,7 @@ namespace Clusterizer
         /// <summary>
         /// The contents
         /// </summary>
-        private StatisticPoint[][] contents;
-
-        /// <summary>
-        /// The is calculation over
-        /// </summary>
-        private bool _isCalculationOver;
+        private StatisticPoint[][] _contents;
 
         #endregion
 
@@ -78,16 +73,17 @@ namespace Clusterizer
         {
             _dataTable = new DataTable();
             _dataTable.Columns.Add("Название кластера");
-            for (int i = 0; i < Tools.NumericDataHeadings.Length; i++)
-                _dataTable.Columns.Add(Tools.NumericDataHeadings[i]);
-            _dataTable.Columns.Add("Число обьектов");
-            contents = new StatisticPoint[contentsHeadings.Length][];
+            foreach (var numericDataHeading in Tools.NumericDataHeadings)
+                _dataTable.Columns.Add(numericDataHeading);
 
-            for (int i = 0; i < _clusters.Count; i++)
+            _dataTable.Columns.Add("Число обьектов");
+            _contents = new StatisticPoint[contentsHeadings.Length][];
+
+            for (int i = 0; i < Clusters.Count; i++)
             {
-                var list = _clusters.GetCluster(i).Centroid.Points.Select(x => $"{x}").ToList();
-                list.Insert(0, $"Cluster{_clusters.GetCluster(i).ID}");
-                list.Add($"{_clusters.GetCluster(i).QuantityOfDataPoints}");
+                var list = Clusters.GetCluster(i).Centroid.Points.Select(x => $"{x}").ToList();
+                list.Insert(0, $"Cluster{Clusters.GetCluster(i).Id}");
+                list.Add($"{Clusters.GetCluster(i).QuantityOfDataPoints}");
                 _dataTable.Rows.Add(list.ToArray());
             }
 
@@ -96,28 +92,28 @@ namespace Clusterizer
 
             for (int j = 0; j < contentsHeadings.Length; j++)
             {
-                contents[j] = new StatisticPoint[_clusters.Count];
+                _contents[j] = new StatisticPoint[Clusters.Count];
             }
 
-            for (int i = 0; i < _clusters.Count; i++)
+            for (int i = 0; i < Clusters.Count; i++)
             {
                 for (int j = 0; j < contentsHeadings.Length; j++)
                 {
-                    contents[j][i] = new StatisticPoint();
-                    contents[j][i].value = _clusters.GetCluster(i).Centroid[j];
-                    contents[j][i].groupID = 0;
-                    contents[j][i].index = i;
+                    _contents[j][i] = new StatisticPoint
+                    {
+                        value = Clusters.GetCluster(i).Centroid[j], GroupId = 0, index = i
+                    };
                 }
             }
 
             for (int j = 0; j < contentsHeadings.Length; j++)
             {
-                contents[j] = contents[j].OrderBy((x) => x.value).ToArray();
-                var points = contents[j].Select(x => x.value).ToArray();
-                var IDs = Tools.GroupBy(points);
-                for (int i = 0; i < contents[j].Length; i++)
-                    contents[j][i].groupID = IDs[i];
-                contents[j] = contents[j].OrderBy((x) => x.index).ToArray();
+                _contents[j] = _contents[j].OrderBy((x) => x.value).ToArray();
+                var points = _contents[j].Select(x => x.value).ToArray();
+                var indentifiers = Tools.GroupBy(points);
+                for (int i = 0; i < _contents[j].Length; i++)
+                    _contents[j][i].GroupId = indentifiers[i];
+                _contents[j] = _contents[j].OrderBy((x) => x.index).ToArray();
             }
             
 
@@ -136,15 +132,15 @@ namespace Clusterizer
         private void dataGridView1_DataBindingComplete(object sender, DataGridViewBindingCompleteEventArgs e)
         {
     
-            for (int i = 0; i < _clusters.Count; i++)
+            for (int i = 0; i < Clusters.Count; i++)
             {
                 Debug.Write($"Index {i}: ");
                 for (int j = 0; j < contentsHeadings.Length; j++)
                 {
                     Color color;
-                    if (contents[j][i].groupID == 1)
+                    if (_contents[j][i].GroupId == 1)
                         color = Color.Aqua;
-                    else if (contents[j][i].groupID == 2)
+                    else if (_contents[j][i].GroupId == 2)
                         color = Color.AliceBlue;
                     else
                         color = Color.DarkCyan;
@@ -177,10 +173,10 @@ namespace Clusterizer
             using (FileStream fileStream = new FileStream("tmpOverview.csv", FileMode.Create))
             {
                 StreamWriter streamWriter = new StreamWriter(fileStream);
-                for (int i = 0; i < _clusters.Count; i++)
+                for (int i = 0; i < Clusters.Count; i++)
                 {
-                    var tmpContent = _clusters[i].Centroid.Points.ToList();
-                    tmpContent.Add(_clusters[i].QuantityOfDataPoints);
+                    var tmpContent = Clusters[i].Centroid.Points.ToList();
+                    tmpContent.Add(Clusters[i].QuantityOfDataPoints);
                     streamWriter.WriteLine(string.Join(";", tmpContent));
                 }
                 streamWriter.Flush();

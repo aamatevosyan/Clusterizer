@@ -73,27 +73,27 @@ namespace Clusterizer
         /// <summary>
         /// The root list
         /// </summary>
-        private List<Node<string>> _rootList;
+        private readonly List<Node<string>> _rootList;
 
         /// <summary>
         /// The leaves list
         /// </summary>
-        private List<int> _leavesList;
+        private readonly List<int> _leavesList;
 
         /// <summary>
         /// The levels list
         /// </summary>
-        private List<int> _levelsList;
+        private readonly List<int> _levelsList;
 
         /// <summary>
         /// The colors
         /// </summary>
-        private List<Color> _colors;
+        private readonly List<Color> _colors;
 
         /// <summary>
         /// The random
         /// </summary>
-        static Random _random = new Random();
+        static readonly Random random = new Random();
         #endregion
 
         #region Constants             
@@ -206,7 +206,7 @@ namespace Clusterizer
             Node<string> child1;
 
             // cluster with two clusters and without subcluster
-            if (clusters.Count() == 2 && clusters.ElementAt(0).QuantityOfSubClusters == 0)
+            if (clusters.Length == 2 && clusters.ElementAt(0).QuantityOfSubClusters == 0)
             {
                 child0 = GetNodeFromCluster(clusters.ElementAt(0));
                 child1 = GetNodeFromCluster(clusters.ElementAt(1));
@@ -215,24 +215,17 @@ namespace Clusterizer
             }
 
             // singleton cluster with two subclusters
-            if (clusters.Count() == 1 && clusters.ElementAt(0).QuantityOfSubClusters == 2)
+            if (clusters.Length == 1 && clusters.ElementAt(0).QuantityOfSubClusters == 2)
             {
                 return BuildDendrogram(clusters.ElementAt(0).SubClusters.ToArray());
             }
 
             // cluster with two clusters and by 2 subclusters
-            if (clusters.Count() == 2 && clusters.ElementAt(0).QuantityOfSubClusters == 2)
+            if (clusters.Length == 2 && clusters.ElementAt(0).QuantityOfSubClusters == 2)
             {
                 child0 = BuildDendrogram(clusters.ElementAt(0).SubClusters.ToArray());
 
-                if (clusters.ElementAt(1).QuantityOfSubClusters == 2)
-                {
-                    child1 = BuildDendrogram(clusters.ElementAt(1).SubClusters.ToArray());
-                }
-                else
-                {
-                    child1 = GetNodeFromCluster(clusters.ElementAt(1));
-                }
+                child1 = clusters.ElementAt(1).QuantityOfSubClusters == 2 ? BuildDendrogram(clusters.ElementAt(1).SubClusters.ToArray()) : GetNodeFromCluster(clusters.ElementAt(1));
 
 
                 return Create(child0, child1);
@@ -250,7 +243,7 @@ namespace Clusterizer
         /// <returns></returns>
         private Node<string> GetNodeFromCluster(Cluster cluster)
         {
-            return Create("Cluster" + cluster.ID.ToString());
+            return Create("Cluster" + cluster.Id.ToString());
         }
 
         /// <summary>
@@ -281,7 +274,7 @@ namespace Clusterizer
                 _leavesList.Add(_leaves);
 
                 // generate new random color
-                Random rand = _random;
+                Random rand = random;
                 int max = byte.MaxValue + 1; // 256
                 int r = rand.Next(max);
                 int g = rand.Next(max);
@@ -386,7 +379,6 @@ namespace Clusterizer
         private void DendrogramForm_FormClosing(object sender, FormClosingEventArgs e)
         {
             // save image to file before closing
-            Graphics g = _drawarea;
             Bitmap bmp = new Bitmap(dendogramControl.Width, dendogramControl.Height);
             dendogramControl.DrawToBitmap(bmp, new Rectangle(0, 0, dendogramControl.Width, dendogramControl.Height));
             bmp.Save("tmpDendogramm.png");
@@ -400,7 +392,7 @@ namespace Clusterizer
         private void dendogramControl_Paint(object sender, PaintEventArgs e)
         {
             // setup draw area
-            this.dendogramControl.Size = new Size(_width, _height);
+            dendogramControl.Size = new Size(_width, _height);
             _currentY = 0;
             _drawarea = e.Graphics;
             _drawarea.TranslateTransform(DrawingAreaMargin, DrawingAreaMargin);

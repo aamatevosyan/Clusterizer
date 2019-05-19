@@ -42,7 +42,7 @@ namespace Clusterizer
         /// <value>
         /// The identifier.
         /// </value>
-        public int ID { get; set; }
+        public int Id { get; set; }
 
         /// <summary>
         /// Gets the quantity of data points.
@@ -132,12 +132,11 @@ namespace Clusterizer
         public double GetSumOfSquaredError(DistanceMetric distanceMetric)
         {
             double squaredErrorSum = 0;
-            double distToCenter;
 
             //distance of each element to clustercenter
             foreach (var pattern in DataPoints)
             {
-                distToCenter = Distance.GetDistance(Centroid, pattern, distanceMetric);
+                var distToCenter = Distance.GetDistance(Centroid, pattern, distanceMetric);
                 squaredErrorSum += Math.Pow(distToCenter, 2);
             }
             return squaredErrorSum;

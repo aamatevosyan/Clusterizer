@@ -25,7 +25,7 @@ namespace Clusterizer
         /// <value>
         /// The identifier.
         /// </value>
-        public int ID { get; set; }
+        public int Id { get; set; }
 
         /// <summary>
         /// Gets the Point's count.
@@ -75,8 +75,8 @@ namespace Clusterizer
         /// <returns></returns>
         public double this[int index]
         {
-            get { return Points[index]; }
-            set { Points[index] = value; }
+            get => Points[index];
+            set => Points[index] = value;
         }
         #endregion
 
