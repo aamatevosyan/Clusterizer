@@ -31,13 +31,15 @@
             this.label1 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
             this.label3 = new System.Windows.Forms.Label();
-            this.comboBox1 = new System.Windows.Forms.ComboBox();
-            this.comboBox2 = new System.Windows.Forms.ComboBox();
-            this.clusteringButton = new System.Windows.Forms.Button();
-            this.treeView1 = new System.Windows.Forms.TreeView();
+            this.distanceSelectComboBox = new System.Windows.Forms.ComboBox();
+            this.strategySelectComboBox = new System.Windows.Forms.ComboBox();
+            this.doClusteringButton = new System.Windows.Forms.Button();
+            this.pointsSelectTreeView = new System.Windows.Forms.TreeView();
             this.label4 = new System.Windows.Forms.Label();
-            this.textBox1 = new System.Windows.Forms.TextBox();
-            this.button1 = new System.Windows.Forms.Button();
+            this.clusterCountTextBox = new System.Windows.Forms.TextBox();
+            this.calculateClusterCountButton = new System.Windows.Forms.Button();
+            this.label5 = new System.Windows.Forms.Label();
+            this.normalizeMethodSelectComboBox = new System.Windows.Forms.ComboBox();
             this.SuspendLayout();
             // 
             // label1
@@ -67,98 +69,127 @@
             this.label3.TabIndex = 2;
             this.label3.Text = "Выберите покозатели по которым нужно выполнить кластеризацию: ";
             // 
-            // comboBox1
+            // distanceSelectComboBox
             // 
-            this.comboBox1.FormattingEnabled = true;
-            this.comboBox1.Items.AddRange(new object[] {
+            this.distanceSelectComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.distanceSelectComboBox.FormattingEnabled = true;
+            this.distanceSelectComboBox.Items.AddRange(new object[] {
             "Евклидово расстояние\n",
             "Квадрат евклидова расстояния\n   ",
             "Расстояние городских кварталов (манхэттенское расстояние)\n",
             "Расстояние Чебышева"});
-            this.comboBox1.Location = new System.Drawing.Point(149, 12);
-            this.comboBox1.Name = "comboBox1";
-            this.comboBox1.Size = new System.Drawing.Size(372, 21);
-            this.comboBox1.TabIndex = 3;
-            this.comboBox1.SelectedIndexChanged += new System.EventHandler(this.comboBox1_SelectedIndexChanged);
+            this.distanceSelectComboBox.Location = new System.Drawing.Point(149, 12);
+            this.distanceSelectComboBox.Name = "distanceSelectComboBox";
+            this.distanceSelectComboBox.Size = new System.Drawing.Size(372, 21);
+            this.distanceSelectComboBox.TabIndex = 3;
             // 
-            // comboBox2
+            // strategySelectComboBox
             // 
-            this.comboBox2.FormattingEnabled = true;
-            this.comboBox2.Items.AddRange(new object[] {
+            this.strategySelectComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.strategySelectComboBox.FormattingEnabled = true;
+            this.strategySelectComboBox.Items.AddRange(new object[] {
             "Одиночная связь (расстояния ближайшего соседа)",
             "Полная связь (расстояние наиболее удаленных соседей)",
             "Невзвешенное попарное среднее",
             "Взвешенное попарное среднее",
             "Метод Центроидов",
             "Метод Варда"});
-            this.comboBox2.Location = new System.Drawing.Point(675, 12);
-            this.comboBox2.Name = "comboBox2";
-            this.comboBox2.Size = new System.Drawing.Size(577, 21);
-            this.comboBox2.TabIndex = 4;
+            this.strategySelectComboBox.Location = new System.Drawing.Point(675, 12);
+            this.strategySelectComboBox.Name = "strategySelectComboBox";
+            this.strategySelectComboBox.Size = new System.Drawing.Size(577, 21);
+            this.strategySelectComboBox.TabIndex = 4;
             // 
-            // clusteringButton
+            // doClusteringButton
             // 
-            this.clusteringButton.Location = new System.Drawing.Point(12, 396);
-            this.clusteringButton.Name = "clusteringButton";
-            this.clusteringButton.Size = new System.Drawing.Size(1240, 23);
-            this.clusteringButton.TabIndex = 6;
-            this.clusteringButton.Text = "Выполнить кластеризацию";
-            this.clusteringButton.UseVisualStyleBackColor = true;
-            this.clusteringButton.Click += new System.EventHandler(this.clusteringButton_Click);
+            this.doClusteringButton.Location = new System.Drawing.Point(12, 396);
+            this.doClusteringButton.Name = "doClusteringButton";
+            this.doClusteringButton.Size = new System.Drawing.Size(1240, 23);
+            this.doClusteringButton.TabIndex = 6;
+            this.doClusteringButton.Text = "Выполнить кластеризацию";
+            this.doClusteringButton.UseVisualStyleBackColor = true;
+            this.doClusteringButton.Click += new System.EventHandler(this.doClusteringButton_Click);
             // 
-            // treeView1
+            // pointsSelectTreeView
             // 
-            this.treeView1.Location = new System.Drawing.Point(12, 129);
-            this.treeView1.Name = "treeView1";
-            this.treeView1.Size = new System.Drawing.Size(1240, 261);
-            this.treeView1.TabIndex = 7;
-            this.treeView1.AfterCheck += new System.Windows.Forms.TreeViewEventHandler(this.treeView1_AfterCheck);
+            this.pointsSelectTreeView.Location = new System.Drawing.Point(12, 129);
+            this.pointsSelectTreeView.Name = "pointsSelectTreeView";
+            this.pointsSelectTreeView.Size = new System.Drawing.Size(1240, 261);
+            this.pointsSelectTreeView.TabIndex = 7;
+            this.pointsSelectTreeView.AfterCheck += new System.Windows.Forms.TreeViewEventHandler(this.pointsSelectTreeView_AfterCheck);
             // 
             // label4
             // 
             this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(12, 53);
+            this.label4.Location = new System.Drawing.Point(538, 53);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(101, 13);
             this.label4.TabIndex = 8;
             this.label4.Text = "Число кластеров: ";
             // 
-            // textBox1
+            // clusterCountTextBox
             // 
-            this.textBox1.Location = new System.Drawing.Point(149, 50);
-            this.textBox1.Name = "textBox1";
-            this.textBox1.Size = new System.Drawing.Size(372, 20);
-            this.textBox1.TabIndex = 9;
-            this.textBox1.Text = "2";
-            this.textBox1.TextChanged += new System.EventHandler(this.textBox1_TextChanged);
+            this.clusterCountTextBox.Location = new System.Drawing.Point(675, 50);
+            this.clusterCountTextBox.Name = "clusterCountTextBox";
+            this.clusterCountTextBox.Size = new System.Drawing.Size(170, 20);
+            this.clusterCountTextBox.TabIndex = 9;
+            this.clusterCountTextBox.Text = "2";
             // 
-            // button1
+            // calculateClusterCountButton
             // 
-            this.button1.Location = new System.Drawing.Point(541, 48);
-            this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(333, 23);
-            this.button1.TabIndex = 10;
-            this.button1.Text = "Рассчитать число рекомендуемое число класстеров";
-            this.button1.UseVisualStyleBackColor = true;
-            this.button1.Click += new System.EventHandler(this.button1_Click);
+            this.calculateClusterCountButton.Location = new System.Drawing.Point(851, 48);
+            this.calculateClusterCountButton.Name = "calculateClusterCountButton";
+            this.calculateClusterCountButton.Size = new System.Drawing.Size(401, 23);
+            this.calculateClusterCountButton.TabIndex = 10;
+            this.calculateClusterCountButton.Text = "Рассчитать число рекомендуемое число класстеров";
+            this.calculateClusterCountButton.UseVisualStyleBackColor = true;
+            this.calculateClusterCountButton.Click += new System.EventHandler(this.calculateClusterCountButton_Click);
+            // 
+            // label5
+            // 
+            this.label5.AutoSize = true;
+            this.label5.Location = new System.Drawing.Point(9, 53);
+            this.label5.Name = "label5";
+            this.label5.Size = new System.Drawing.Size(122, 13);
+            this.label5.TabIndex = 11;
+            this.label5.Text = "Метод нормализации: ";
+            // 
+            // normalizeMethodSelectComboBox
+            // 
+            this.normalizeMethodSelectComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.normalizeMethodSelectComboBox.FormattingEnabled = true;
+            this.normalizeMethodSelectComboBox.Items.AddRange(new object[] {
+            "Никакой",
+            "Метод Min-Max",
+            "Метод Z-Score"});
+            this.normalizeMethodSelectComboBox.Location = new System.Drawing.Point(149, 50);
+            this.normalizeMethodSelectComboBox.Name = "normalizeMethodSelectComboBox";
+            this.normalizeMethodSelectComboBox.Size = new System.Drawing.Size(372, 21);
+            this.normalizeMethodSelectComboBox.TabIndex = 12;
             // 
             // ClusterizeForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1264, 431);
-            this.Controls.Add(this.button1);
-            this.Controls.Add(this.textBox1);
+            this.Controls.Add(this.normalizeMethodSelectComboBox);
+            this.Controls.Add(this.label5);
+            this.Controls.Add(this.calculateClusterCountButton);
+            this.Controls.Add(this.clusterCountTextBox);
             this.Controls.Add(this.label4);
-            this.Controls.Add(this.treeView1);
-            this.Controls.Add(this.clusteringButton);
-            this.Controls.Add(this.comboBox2);
-            this.Controls.Add(this.comboBox1);
+            this.Controls.Add(this.pointsSelectTreeView);
+            this.Controls.Add(this.doClusteringButton);
+            this.Controls.Add(this.strategySelectComboBox);
+            this.Controls.Add(this.distanceSelectComboBox);
             this.Controls.Add(this.label3);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.label1);
+            this.MaximumSize = new System.Drawing.Size(1280, 470);
+            this.MinimumSize = new System.Drawing.Size(1280, 470);
             this.Name = "ClusterizeForm";
-            this.Text = "ClusterizeForm";
+            this.ShowIcon = false;
+            this.ShowInTaskbar = false;
+            this.SizeGripStyle = System.Windows.Forms.SizeGripStyle.Hide;
+            this.TopMost = true;
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -169,12 +200,14 @@
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.Label label3;
-        private System.Windows.Forms.ComboBox comboBox1;
-        private System.Windows.Forms.ComboBox comboBox2;
-        private System.Windows.Forms.Button clusteringButton;
-        private System.Windows.Forms.TreeView treeView1;
+        private System.Windows.Forms.ComboBox distanceSelectComboBox;
+        private System.Windows.Forms.ComboBox strategySelectComboBox;
+        private System.Windows.Forms.Button doClusteringButton;
+        private System.Windows.Forms.TreeView pointsSelectTreeView;
         private System.Windows.Forms.Label label4;
-        private System.Windows.Forms.TextBox textBox1;
-        private System.Windows.Forms.Button button1;
+        private System.Windows.Forms.TextBox clusterCountTextBox;
+        private System.Windows.Forms.Button calculateClusterCountButton;
+        private System.Windows.Forms.Label label5;
+        private System.Windows.Forms.ComboBox normalizeMethodSelectComboBox;
     }
 }

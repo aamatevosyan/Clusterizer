@@ -1,84 +1,76 @@
 ﻿namespace Clusterizer
 {
     /// <summary>
-    /// Статистический класс для расчета растояния между кластерами
+    /// Static class for computing distance between clusters
     /// </summary>
     public static class ClusterDistance
     {
-        #region Strategy
         /// <summary>
-        /// Перечисление стратегии объединения кластеров
+        /// Computes the distance between singleton clusters.
         /// </summary>
-        public enum Strategy
-        {
-            SingleLinkage, // Одиночная связь (расстояния ближайшего соседа)
-            CompleteLinkage, // Полная связь (расстояние наиболее удаленных соседей)
-            AverageLinkageWPGMA, // Невзвешенное попарное среднее
-            AverageLinkageUPGMA, // Взвешенное попарное среднее
-            CentroidLinkage, // Растояние центроидов
-            MinimalSOELinkage // Метод минимальным сумм квадратов
-        }
-        #endregion
-
-        #region Методы
-        /// <summary>
-        /// Считает растояние между двумя кластерами
-        /// </summary>
-        /// <param name="cluster1">Первый кластер</param>
-        /// <param name="cluster2">Второй кластер</param>
-        /// <returns></returns>
-        public static double ComputeDistance(Cluster cluster1, Cluster cluster2, Distance.DistanceMetric distanceMetric)
+        /// <param name="cluster1">The cluster1.</param>
+        /// <param name="cluster2">The cluster2.</param>
+        /// <param name="distanceMetric">The distance metric.</param>
+        /// <returns>Distance between singleton clusters</returns>
+        public static double ComputeDistance(Cluster cluster1, Cluster cluster2, DistanceMetric distanceMetric)
         {
             double distance = 0;
 
-            // Если синглтон кластер то считает растояние между ними
-            if (cluster1.QuantityOfPatterns == 1 && cluster2.QuantityOfPatterns == 1)
-                distance = Distance.GetDistance(cluster1.GetPattern(0), cluster2.GetPattern(0), distanceMetric);
+            // check if clusters are singleton
+            if (cluster1.QuantityOfDataPoints == 1 && cluster2.QuantityOfDataPoints == 1)
+                distance = Distance.GetDistance(cluster1.DataPoints[0], cluster2.DataPoints[0], distanceMetric);
 
             return distance;
         }
 
 
         /// <summary>
-        /// Считает растояние между двумя кластерами если они имеют подкластеры(
+        /// Computes the distance.
         /// </summary>
-        /// <param name="cluster1">Первый кластер</param>
-        /// <param name="cluster2">Второй кластер</param>
-        /// <param name="dissimilarityMatrix">Матрица разностей</param>
-        /// <param name="strategy">Стратегия обьеденения</param>
-        public static double ComputeDistance(Cluster cluster1, Cluster cluster2, DissimilarityMatrix dissimilarityMatrix, Strategy strategy)
+        /// <param name="cluster1">The cluster1.</param>
+        /// <param name="cluster2">The cluster2.</param>
+        /// <param name="dissimilarityMatrix">The dissimilarity matrix.</param>
+        /// <param name="strategy">The strategy.</param>
+        /// <returns>Distance between clusters</returns>
+        public static double ComputeDistance(Cluster cluster1, Cluster cluster2, DissimilarityMatrix dissimilarityMatrix, MergeStrategy strategy)
         {
             double distance1, distance2, distance = 0;
-            // Растояние между cluster1 и первым подкластером cluster2
             distance1 = dissimilarityMatrix.ReturnClusterPairDistance(new ClusterPair(cluster1, cluster2.GetSubCluster(0)));
-            // Растояние между cluster1 и вторым подкластером cluster2
             distance2 = dissimilarityMatrix.ReturnClusterPairDistance(new ClusterPair(cluster1, cluster2.GetSubCluster(1)));
 
+            // computes distance by using merge strategy
             switch (strategy)
             {
-                case Strategy.SingleLinkage: distance = _MinValue(distance1, distance2); break;
-                case Strategy.CompleteLinkage: distance = _MaxValue(distance1, distance2); break;
-                case Strategy.AverageLinkageWPGMA: distance = (distance1 + distance2) / 2; break;
-                case Strategy.AverageLinkageUPGMA:
-                    distance = ((cluster2.GetSubCluster(0).TotalQuantityOfPatterns * distance1) / cluster2.TotalQuantityOfPatterns) + ((cluster2.GetSubCluster(1).TotalQuantityOfPatterns * distance2) / cluster2.TotalQuantityOfPatterns);
+                case MergeStrategy.SingleLinkage:
+                    distance = _MinValue(distance1, distance2); // Min(x, y)
                     break;
-                case Strategy.CentroidLinkage:
-                    cluster1.GetAllPatterns();
-                    cluster2.GetAllPatterns();
+                case MergeStrategy.CompleteLinkage:
+                    distance = _MaxValue(distance1, distance2); // Max(x, y)
+                    break;
+                case MergeStrategy.AverageLinkageWPGMA:
+                    distance = (distance1 + distance2) / 2; // Avg(x, y)
+                    break;
+                case MergeStrategy.AverageLinkageUPGMA:
+                    distance = ((cluster2.GetSubCluster(0).QuantityOfDataPoints * distance1) / cluster2.QuantityOfDataPoints) 
+                               + ((cluster2.GetSubCluster(1).QuantityOfDataPoints * distance2) / cluster2.QuantityOfDataPoints); // WeightedAvg(x, y)
+                    break;
+                case MergeStrategy.CentroidMethod:
                     cluster1.SetCentroid();
                     cluster2.SetCentroid();
-                    distance = Distance.GetDistance(cluster1._centroid, cluster2._centroid,
-                        Distance.DistanceMetric.SquareEuclidianDistance);
+                    distance = Distance.GetDistance(cluster1.Centroid, cluster2.Centroid,
+                        DistanceMetric.SquareEuclidianDistance); // Distance of centroids
                     break;
-                case Strategy.MinimalSOELinkage:
+                case MergeStrategy.WardsMethod:
 
                     Cluster newCluster = new Cluster();
                     newCluster.AddSubCluster(cluster1);
                     newCluster.AddSubCluster(cluster2);
-                    newCluster.GetAllPatterns();
                     newCluster.SetCentroid();
 
-                    distance = newCluster.getSumOfSquaredError(Distance.DistanceMetric.EuclidianDistance) - cluster1.getSumOfSquaredError(Distance.DistanceMetric.EuclidianDistance) - cluster2.getSumOfSquaredError(Distance.DistanceMetric.EuclidianDistance);
+                    distance = newCluster.GetSumOfSquaredError(DistanceMetric.EuclidianDistance) 
+                               - cluster1.GetSumOfSquaredError(DistanceMetric.EuclidianDistance) 
+                               - cluster2.GetSumOfSquaredError(DistanceMetric.EuclidianDistance);
+                    // SEO(xy) - SEO(x) - SEO(y)
                     break;
             }
 
@@ -87,26 +79,40 @@
         }
 
         /// <summary>
-        /// Возвращает минимальное значение двух вещественных чисел
+        /// Calculate the minimal of the given values
         /// </summary>
-        /// <param name="value1">Первое число</param>
-        /// <param name="value2">Второе число</param>
-        /// <returns></returns>
+        /// <param name="value1">The value1.</param>
+        /// <param name="value2">The value2.</param>
+        /// <returns>Minimum of the values</returns>
         private static double _MinValue(double value1, double value2)
         {
             return value1 < value2 ? value1 : value2;
         }
 
         /// <summary>
-        /// Возвращает максимальное значение двух вещественных чисел
+        /// Calculate the minimal of the given values
         /// </summary>
-        /// <param name="value1">Первое число</param>
-        /// <param name="value2">Второе число</param>
-        /// <returns></returns>
+        /// <param name="value1">The value1.</param>
+        /// <param name="value2">The value2.</param>
+        /// <returns>Maximum of the values</returns>
         private static double _MaxValue(double value1, double value2)
         {
             return value1 > value2 ? value1 : value2;
         }
-        #endregion
     }
+
+    #region Merge Strategy  
+    /// <summary>
+    /// Enum of merge strategies
+    /// </summary>
+    public enum MergeStrategy
+    {
+        SingleLinkage, // Single Linkage
+        CompleteLinkage, // Complete Linkage
+        AverageLinkageWPGMA, // Average Linkage (WPGMA)
+        AverageLinkageUPGMA, // Average Linkage (UPGMA)
+        CentroidMethod, // Centroid Method
+        WardsMethod // Wards Method
+    }
+    #endregion
 }

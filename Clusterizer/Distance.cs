@@ -4,64 +4,49 @@ namespace Clusterizer
 {
     public static class Distance
     {
-        #region DistanceMetric        
         /// <summary>
-        /// Меры расстояний
+        /// Gets the distance.
         /// </summary>
-        public enum DistanceMetric
-        {
-            EuclidianDistance, // Евклидово расстояние
-            SquareEuclidianDistance, // Квадрат евклидова расстояния
-            ManhattanDistance, // Расстояние городских кварталов (манхэттенское расстояние)
-            ChebyshevDistance // Расстояние Чебышева
-        }
-
-
-        #endregion
-        #region Методы
-        //double GetDistance(double[] x, double[] y);
-
-        /// <summary>
-        /// Возвращает растояение между точками X и Y
-        /// </summary>
-        /// <param name="x">X</param>
-        /// <param name="y">Y</param>
-        /// <param name="distanceMetric">Мера расстояния</param>
+        /// <param name="x">The x.</param>
+        /// <param name="y">The y.</param>
+        /// <param name="distanceMetric">The distance metric.</param>
+        /// <returns></returns>
         /// <exception cref="ArgumentException">Неравное колличество точек.</exception>
-        public static double GetDistance(double[] x, double[] y, DistanceMetric distanceMetric)
+        public static double GetDistance(DataPoint x, DataPoint y, DistanceMetric distanceMetric)
         {
             double distance = 0;
             double diff = 0;
 
-            if (x.Length != y.Length)
+            // checks for dimensions match
+            if (x.Count != y.Count)
                 throw new ArgumentException("Неравное колличество точек.");
 
             switch (distanceMetric)
             {
-                case DistanceMetric.EuclidianDistance:
-                    for (int i = 0; i < x.Length; i++)
+                case DistanceMetric.EuclidianDistance: // calculates by using Euclidian Distance
+                    for (int i = 0; i < x.Count; i++)
                     {
                         diff = x[i] - y[i];
-                        distance += diff * diff;
+                        distance += diff * diff; 
                     }
                     distance = Math.Sqrt(distance);
                     break;
-                case DistanceMetric.SquareEuclidianDistance:
-                    for (int i = 0; i < x.Length; i++)
+                case DistanceMetric.SquareEuclidianDistance: // calculates by using Square of Euclidian Distance
+                    for (int i = 0; i < x.Count; i++)
                     {
                         diff = x[i] - y[i];
                         distance += diff * diff;
                     }
                     break;
-                case DistanceMetric.ManhattanDistance:
-                    for (int i = 0; i < x.Length; i++)
+                case DistanceMetric.ManhattanDistance: // calculates by using Manhattan Distance
+                    for (int i = 0; i < x.Count; i++)
                     {
                         diff = x[i] - y[i];
                         distance += Math.Abs(diff);
                     }
                     break;
-                case DistanceMetric.ChebyshevDistance:
-                    for (int i = 0; i < x.Length; i++)
+                case DistanceMetric.ChebyshevDistance: // calculates by using Chebyshev Distance
+                    for (int i = 0; i < x.Count; i++)
                     {
                         diff = x[i] - y[i];
                         distance = (distance > diff) ? distance : diff;
@@ -71,18 +56,16 @@ namespace Clusterizer
 
             return distance;
         }
-
-        /// <summary>
-        /// Возвращает растояение между двумя паттернами
-        /// </summary>
-        /// <param name="pattern1">Первый паттерн</param>
-        /// <param name="pattern2">Второй паттерн</param>
-        /// <param name="distanceMetric">Мера расстояния</param>
-        /// <returns></returns>
-        public static double GetDistance(Pattern pattern1, Pattern pattern2, DistanceMetric distanceMetric)
-        {
-            return GetDistance(pattern1.GetPoints(), pattern2.GetPoints(), distanceMetric);
-        }
-        #endregion
     }
+
+    #region DistanceMetric
+    public enum DistanceMetric
+    {
+        EuclidianDistance, // Euclidian Metric
+        SquareEuclidianDistance, // Square of Euclidian Metric
+        ManhattanDistance, // Manhattan Metric
+        ChebyshevDistance // Chebyshev Metric
+    }
+    #endregion
+
 }

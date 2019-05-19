@@ -14,100 +14,131 @@ using System.Windows.Forms;
 namespace Clusterizer
 {
     /// <summary>
-    /// Класс для представления дендограммы
+    /// Form for visualizing Dendogram
     /// </summary>
     /// <seealso cref="System.Windows.Forms.Form" />
     public partial class DendrogramForm : Form
     {
-        #region Поля        
+        #region Properties                
         /// <summary>
-        /// Кластеры
+        /// The drawarea
         /// </summary>
-        public Clusters _clusters;
-        /// <summary>
-        /// Поле рисования
-        /// </summary>
-        Graphics drawarea;
-        /// <summary>
-        /// Дерево класстеров
-        /// </summary>
-        private Node<string> root;
-        /// <summary>
-        /// Число листьев
-        /// </summary>
-        private int leaves;
-        /// <summary>
-        /// Число уровней
-        /// </summary>
-        private int levels;
-        /// <summary>
-        /// Ширина каждого уровня
-        /// </summary>
-        private int widthPerLevel;
-        /// <summary>
-        /// Текущий Y
-        /// </summary>
-        private int currentY;
-        /// <summary>
-        /// Высота
-        /// </summary>
-        private int height;
-        /// <summary>
-        /// Ширина
-        /// </summary>
-        private int width;
+        private Graphics _drawarea;
 
-        private List<Node<string>> rootList;
-        private List<int> leavesList;
-        private List<int> levelsList;
-        private List<Color> colors;
+        /// <summary>
+        /// The root
+        /// </summary>
+        private Node<string> _root;
 
-        private int maxLevel;
-        private Color color;
+        /// <summary>
+        /// The current count of leaves
+        /// </summary>
+        private int _leaves;
 
-        static Random random = new Random();
+        /// <summary>
+        /// The current count of levels
+        /// </summary>
+        private int _levels;
+
+        /// <summary>
+        /// The curent color
+        /// </summary>
+        private Color _color;
+
+        /// <summary>
+        /// The width per level
+        /// </summary>
+        private int _widthPerLevel;
+
+        /// <summary>
+        /// The maximum level
+        /// </summary>
+        private int _maxLevel;
+
+        /// <summary>
+        /// The current y
+        /// </summary>
+        private int _currentY;
+
+        /// <summary>
+        /// The height
+        /// </summary>
+        private int _height;
+
+        /// <summary>
+        /// The width
+        /// </summary>
+        private int _width;
+
+        /// <summary>
+        /// The root list
+        /// </summary>
+        private List<Node<string>> _rootList;
+
+        /// <summary>
+        /// The leaves list
+        /// </summary>
+        private List<int> _leavesList;
+
+        /// <summary>
+        /// The levels list
+        /// </summary>
+        private List<int> _levelsList;
+
+        /// <summary>
+        /// The colors
+        /// </summary>
+        private List<Color> _colors;
+
+        /// <summary>
+        /// The random
+        /// </summary>
+        static Random _random = new Random();
         #endregion
 
-        #region Константы        
+        #region Constants             
         /// <summary>
-        /// Высота листья
+        /// The height per leaf
         /// </summary>
-        private const int heightPerLeaf = 40;
+        private const int HeightPerLeaf = 40;
+
         /// <summary>
-        /// Разница поля рисования
+        /// The drawing area margin
         /// </summary>
         private const int DrawingAreaMargin = 25;
+
         /// <summary>
-        /// Отступ контента
+        /// The contest offset
         /// </summary>
         private const int ContestOffset = 80;
+
         /// <summary>
-        /// Отступ поля рисования
+        /// The drawing area offset
         /// </summary>
         private const int DrawingAreaOffset = 35;
         #endregion
 
-        #region Конструктор        
+        #region Constructor               
         /// <summary>
-        /// Конструктор без параметров класса <see cref="DendrogramForm"/>.
+        /// Initializes a new instance of the <see cref="DendrogramForm"/> class.
         /// </summary>
         public DendrogramForm()
         {
             InitializeComponent();
-            drawarea = drawingArea.CreateGraphics();
-            rootList = new List<Node<string>>();
-            leavesList = new List<int>();
-            levelsList = new List<int>();
-            colors = new List<Color>();
+            _drawarea = dendogramControl.CreateGraphics();
+            _rootList = new List<Node<string>>();
+            _leavesList = new List<int>();
+            _levelsList = new List<int>();
+            _colors = new List<Color>();
         }
         #endregion
 
 
-        #region Методы        
+        #region Methods                
         /// <summary>
-        /// Создает единичное дерево с контентом
+        /// Creates the specified contents.
         /// </summary>
-        /// <param name="contents">Контент</param>
+        /// <param name="contents">The contents.</param>
         /// <returns></returns>
         private Node<string> Create(string contents)
         {
@@ -115,10 +146,10 @@ namespace Clusterizer
         }
 
         /// <summary>
-        /// Создает дерево с двумя поддеревами
+        /// Creates the specified child0.
         /// </summary>
-        /// <param name="child0">Первое поддерево</param>
-        /// <param name="child1">Второе поддерево</param>
+        /// <param name="child0">The child0.</param>
+        /// <param name="child1">The child1.</param>
         /// <returns></returns>
         private Node<string> Create(Node<string> child0, Node<string> child1)
         {
@@ -126,9 +157,9 @@ namespace Clusterizer
         }
 
         /// <summary>
-        /// Считает количество листьев
+        /// Counts the leaves.
         /// </summary>
-        /// <param name="node">Дерево</param>
+        /// <param name="node">The node.</param>
         /// <returns></returns>
         private int CountLeaves(Node<string> node)
         {
@@ -145,9 +176,9 @@ namespace Clusterizer
         }
 
         /// <summary>
-        /// Считает количество уровней
+        /// Counts the levels.
         /// </summary>
-        /// <param name="node">Дерево</param>
+        /// <param name="node">The node.</param>
         /// <returns></returns>
         private int CountLevels(Node<string> node)
         {
@@ -165,15 +196,16 @@ namespace Clusterizer
         }
 
         /// <summary>
-        /// Строит дендограмму из кластеров
+        /// Builds the dendrogram.
         /// </summary>
-        /// <param name="clusters">Кластеры</param>
-        /// <returns></returns>
+        /// <param name="clusters">The clusters.</param>
+        /// <returns>Return overall node</returns>
         private Node<string> BuildDendrogram(Cluster[] clusters)
         {
             Node<string> child0;
             Node<string> child1;
 
+            // cluster with two clusters and without subcluster
             if (clusters.Count() == 2 && clusters.ElementAt(0).QuantityOfSubClusters == 0)
             {
                 child0 = GetNodeFromCluster(clusters.ElementAt(0));
@@ -182,18 +214,20 @@ namespace Clusterizer
                 return Create(child0, child1);
             }
 
+            // singleton cluster with two subclusters
             if (clusters.Count() == 1 && clusters.ElementAt(0).QuantityOfSubClusters == 2)
             {
-                return BuildDendrogram(clusters.ElementAt(0).GetSubClusters());
+                return BuildDendrogram(clusters.ElementAt(0).SubClusters.ToArray());
             }
 
+            // cluster with two clusters and by 2 subclusters
             if (clusters.Count() == 2 && clusters.ElementAt(0).QuantityOfSubClusters == 2)
             {
-                child0 = BuildDendrogram(clusters.ElementAt(0).GetSubClusters());
+                child0 = BuildDendrogram(clusters.ElementAt(0).SubClusters.ToArray());
 
                 if (clusters.ElementAt(1).QuantityOfSubClusters == 2)
                 {
-                    child1 = BuildDendrogram(clusters.ElementAt(1).GetSubClusters());
+                    child1 = BuildDendrogram(clusters.ElementAt(1).SubClusters.ToArray());
                 }
                 else
                 {
@@ -205,142 +239,111 @@ namespace Clusterizer
             }
 
 
-            return root;
+            return _root;
 
         }
 
         /// <summary>
-        /// Получает дерево из кластера
+        /// Gets the node from cluster.
         /// </summary>
-        /// <param name="cluster">Кластера</param>
+        /// <param name="cluster">The cluster.</param>
+        /// <returns></returns>
         private Node<string> GetNodeFromCluster(Cluster cluster)
         {
-            return Create("Cluster" + cluster.Id.ToString());
+            return Create("Cluster" + cluster.ID.ToString());
         }
 
         /// <summary>
-        /// Первоначальная установка
+        /// Setups this instance.
         /// </summary>
         public void Setup()
-        {
-            if (_clusters == null)
+        {  
+            for (int i = 0; i < Tools.Clusters.ClustersList.Count; i++)
             {
-                MessageBox.Show("Пожалуйста кластеризуйте сначала данные.");
-                return;
-            }
+                // get overall root
+                _root = BuildDendrogram(new Cluster[] { Tools.Clusters.ClustersList.ElementAt(i) });
 
-           
+                // check if singleton cluster
+                if (Tools.Clusters.GetCluster(i).QuantityOfSubClusters == 0)
+                    _root = GetNodeFromCluster(Tools.Clusters.GetCluster(i));
 
-            for (int i = 0; i < _clusters._clusters.Count; i++)
-            {
-                root = BuildDendrogram(new Cluster[] { _clusters._clusters.ElementAt(i) });
+                // calculate values
+                _leaves = CountLeaves(_root);
+                _levels = CountLevels(_root);
 
-                //if (root == null)
-                //{
-                //    root = GetNodeFromCluster(_clusters.GetCluster(i));
-                //}
+                // get maxLevel count
+                if (_levels > _maxLevel)
+                    _maxLevel = _levels;
 
-                if (_clusters.GetCluster(i).QuantityOfSubClusters == 0)
-                    root = GetNodeFromCluster(_clusters.GetCluster(i));
+                // add calculated values to list
+                _rootList.Add(_root);
+                _levelsList.Add(_levels);
+                _leavesList.Add(_leaves);
 
-                rootList.Add(root);
-
-                leaves = CountLeaves(root);
-                levels = CountLevels(root);
-
-                if (levels > maxLevel)
-                    maxLevel = levels;
-
-                levelsList.Add(levels);
-                leavesList.Add(leaves);
-
-                Random rand = random;
+                // generate new random color
+                Random rand = _random;
                 int max = byte.MaxValue + 1; // 256
                 int r = rand.Next(max);
                 int g = rand.Next(max);
                 int b = rand.Next(max);
                 Color c = Color.FromArgb(r, g, b);
-                colors.Add(c);
+                _colors.Add(c);
             }
         }
 
         /// <summary>
-        /// Рисует дендограмму
+        /// Draws the specified g.
         /// </summary>
-        /// <param name="e">Аргумент события <see cref="PaintEventArgs"/> </param>
-        public void DrawDendrogram(PaintEventArgs e)
-        {
-            this.drawingArea.Size = new Size(width, height);
-            currentY = 0;
-            drawarea = e.Graphics;
-            drawarea.TranslateTransform(DrawingAreaMargin, DrawingAreaMargin);
-
-            for (int i = 0; i < _clusters._clusters.Count; i++)
-            {
-                root = rootList[i];
-                levels = levelsList[i];
-                leaves = leavesList[i];
-                color = colors[i];
-
-                widthPerLevel = (width - ContestOffset - DrawingAreaMargin - DrawingAreaMargin) / maxLevel;
-
-                
-                draw(drawarea, root, currentY);
-            }
-
-
-            //drawarea.TranslateTransform(DrawingAreaMargin, DrawingAreaMargin);
-            //draw(drawarea, root, 0);
-        }
-
-        /// <summary>
-        /// Рисует дендограмму
-        /// </summary>
-        /// <param name="g">Графика</param>
-        /// <param name="node">Дерево</param>
-        /// <param name="y">Координат Y</param>
+        /// <param name="g">The g.</param>
+        /// <param name="node">The node.</param>
+        /// <param name="y">The y.</param>
         /// <returns></returns>
-        private Point draw(Graphics g, Node<string> node, int y)
+        private Point Draw(Graphics g, Node<string> node, int y)
         {
+            // children of node
             List<Node<string>> children = node.ChildrenNodes;
-            Pen pen = new Pen(color);
-            SolidBrush brush = new SolidBrush(color);
+            // pen for drawing
+            Pen pen = new Pen(_color);
+            // brush for drawing
+            SolidBrush brush = new SolidBrush(_color);
 
+            // if singleton cluster
             if (children.Count == 0)
             {
-                int x = Width - ContestOffset - widthPerLevel - 2 * DrawingAreaMargin;
-
-                //g.DrawString(node.Contents, new Font("Times New Roman", 8.0f), Brushes.Black, x + 8, currentY - 8);
-                g.DrawString(node.Contents, new Font("Times New Roman", 8.0f), brush, x + 8, currentY - 8);
+                int x = Width - ContestOffset - _widthPerLevel - 2 * DrawingAreaMargin;
+                // draws string with cluster nam
+                g.DrawString(node.Contents, new Font("Times New Roman", 8.0f), brush, x + 8, _currentY - 8);
                 int resultX = x;
-                int resultY = currentY;
-                currentY += heightPerLeaf;
+                int resultY = _currentY;
+                _currentY += HeightPerLeaf;
                 return new Point(resultX, resultY);
             }
 
+            // if cluster have subclusters
             if (children.Count >= 2)
             {
                 Node<string> child0 = children.ElementAt(0);
                 Node<string> child1 = children.ElementAt(1);
-                Point p0 = draw(g, child0, y);
-                Point p1 = draw(g, child1, y + heightPerLeaf);
 
+                // get points of the childs by order
+                Point p0 = Draw(g, child0, y);
+                Point p1 = Draw(g, child1, y + HeightPerLeaf);
+
+                // fill rectanbles of them
                 g.FillRectangle(brush, p0.X - 2, p0.Y - 2, 4, 4);
                 g.FillRectangle(brush, p1.X - 2, p1.Y - 2, 4, 4);
 
-                int dx = widthPerLevel;
+                // calculate parameters
+                int dx = _widthPerLevel;
                 int vx = Math.Min(p0.X - dx, p1.X - dx);
 
-                //Pen blackPen = new Pen(Color.Black);
-                //g.DrawLine(blackPen, vx, p0.Y, p0.X, p0.Y);
-                //g.DrawLine(blackPen, vx, p1.Y, p1.X, p1.Y);
-                //g.DrawLine(blackPen, vx, p0.Y, vx, p1.Y);
-
+                // combine line with each other
                 Pen blackPen = pen;
                 g.DrawLine(blackPen, vx, p0.Y, p0.X, p0.Y);
                 g.DrawLine(blackPen, vx, p1.Y, p1.X, p1.Y);
                 g.DrawLine(blackPen, vx, p0.Y, vx, p1.Y);
 
+                // returns new point
                 Point p = new Point(vx, p0.Y + (p1.Y - p0.Y) / 2);
                 return p;
             }
@@ -348,56 +351,72 @@ namespace Clusterizer
             return new Point();
         }
 
+        #endregion
+
+        #region Events
         /// <summary>
-        /// Действие при событии Paint поля drawingArea
+        /// Handles the SizeChanged event of the DendrogramFrm control.
         /// </summary>
         /// <param name="sender">The source of the event.</param>
-        /// <param name="e">Аргумент события <see cref="PaintEventArgs"/>.</param>
-        private void drawingArea_Paint(object sender, PaintEventArgs e)
+        /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
+        private void DendrogramForm_SizeChanged(object sender, EventArgs e)
         {
-            DrawDendrogram(e);
-        }
+            // gets size of form
+            _width = Width - DrawingAreaOffset;
+            _height = 0;
 
-        /// <summary>
-        /// Действие при событии SizeChanged формы
-        /// </summary>
-        /// <param name="sender">The source of the event.</param>
-        /// <param name="e">Аргумент события <see cref="EventArgs"/>.</param>
-        private void DendrogramFrm_SizeChanged(object sender, EventArgs e)
-        {
-            width = Width - DrawingAreaOffset;
-            height = 0;
-
-            for (int i = 0; i < levelsList.Count; i++)
+            for (int i = 0; i < _levelsList.Count; i++)
             {
-                height += (heightPerLeaf * leavesList[i]);
+                _height += (HeightPerLeaf * _leavesList[i]);
             }
 
-            height += 2 * DrawingAreaMargin + 50;
+            // calculates new parameters of drawing
+            _height += 2 * DrawingAreaMargin + 50;
+            _widthPerLevel = (_width - ContestOffset - DrawingAreaMargin - DrawingAreaMargin) / _maxLevel;
 
-            widthPerLevel = (width - ContestOffset - DrawingAreaMargin - DrawingAreaMargin) / maxLevel;
-
-            drawingArea.Invalidate();
+            // redraw
+            dendogramControl.Invalidate();
         }
 
         /// <summary>
-        /// Действие при нажатии кнопок
+        /// Handles the FormClosing event of the DendrogramForm control.
         /// </summary>
         /// <param name="sender">The source of the event.</param>
-        /// <param name="e">The <see cref="KeyEventArgs"/> instance containing the event data.</param>
-        private void DendrogramForm_KeyDown(object sender, KeyEventArgs e)
+        /// <param name="e">The <see cref="FormClosingEventArgs"/> instance containing the event data.</param>
+        private void DendrogramForm_FormClosing(object sender, FormClosingEventArgs e)
         {
-            if (e.KeyCode == Keys.S && e.Control)
-            {
-                Graphics g = drawarea;
-                Bitmap bmp = new Bitmap(drawingArea.Width, drawingArea.Height);
-                drawingArea.DrawToBitmap(bmp, new Rectangle(0, 0, drawingArea.Width, drawingArea.Height));
+            // save image to file before closing
+            Graphics g = _drawarea;
+            Bitmap bmp = new Bitmap(dendogramControl.Width, dendogramControl.Height);
+            dendogramControl.DrawToBitmap(bmp, new Rectangle(0, 0, dendogramControl.Width, dendogramControl.Height));
+            bmp.Save("tmpDendogramm.png");
+        }
 
-                SaveFileDialog saveFileDialog = new SaveFileDialog();
-                saveFileDialog.Filter = "PNG File(*.png)|*.png"; ;
-                saveFileDialog.Title = "Сохранить дендограмму...";
-                if (saveFileDialog.ShowDialog() == DialogResult.OK)
-                    bmp.Save(saveFileDialog.FileName);
+        /// <summary>
+        /// Handles the Paint event of the dendogramControl control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="PaintEventArgs"/> instance containing the event data.</param>
+        private void dendogramControl_Paint(object sender, PaintEventArgs e)
+        {
+            // setup draw area
+            this.dendogramControl.Size = new Size(_width, _height);
+            _currentY = 0;
+            _drawarea = e.Graphics;
+            _drawarea.TranslateTransform(DrawingAreaMargin, DrawingAreaMargin);
+
+            // gets all self-dependent elements and draw them
+            for (int i = 0; i < Tools.Clusters.ClustersList.Count; i++)
+            {
+                _root = _rootList[i];
+                _levels = _levelsList[i];
+                _leaves = _leavesList[i];
+                _color = _colors[i];
+
+                _widthPerLevel = (_width - ContestOffset - DrawingAreaMargin - DrawingAreaMargin) / _maxLevel;
+
+                // draw element
+                Draw(_drawarea, _root, _currentY);
             }
         }
         #endregion

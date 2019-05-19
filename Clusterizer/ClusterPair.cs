@@ -3,19 +3,23 @@ using System.Collections.Generic;
 
 namespace Clusterizer
 {
-    //This class stores the pairs of cluster's id which is the dissimilarity matrix entry
+    /// <summary>
+    /// Data structure for presenting pair of clusters
+    /// </summary>
     public class ClusterPair
     {
-        #region private members
-        private Cluster _cluster1;
-        private Cluster _cluster2;
-        #endregion
 
-        #region constructors
-        public ClusterPair()
-        {
-        }
-
+        #region Constructor        
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ClusterPair"/> class.
+        /// </summary>
+        /// <param name="cluster1">The cluster1.</param>
+        /// <param name="cluster2">The cluster2.</param>
+        /// <exception cref="ArgumentNullException">
+        /// cluster1
+        /// or
+        /// cluster2
+        /// </exception>
         public ClusterPair(Cluster cluster1, Cluster cluster2)
         {
 
@@ -30,48 +34,57 @@ namespace Clusterizer
         }
         #endregion
 
-        #region class properties
-        public Cluster Cluster1
-        {
-            get
-            {
-                return _cluster1;
-            }
+        #region Properties        
+        /// <summary>
+        /// Gets or sets the cluster1.
+        /// </summary>
+        /// <value>
+        /// The cluster1.
+        /// </value>
+        public Cluster Cluster1 { get; set; }
 
-            set
-            {
-                _cluster1 = value;
-            }
-        }
+        /// <summary>
+        /// Gets or sets the cluster2.
+        /// </summary>
+        /// <value>
+        /// The cluster2.
+        /// </value>
+        public Cluster Cluster2 { get; set; }
 
-        public Cluster Cluster2
-        {
-            get
-            {
-                return _cluster2;
-            }
-
-            set
-            {
-                _cluster2 = value;
-            }
-        }
         #endregion
 
-        #region class method
+        #region EqualityComparer        
+        /// <summary>
+        /// EqualityComparer for class ClusterPair
+        /// </summary>
+        /// <seealso cref="System.Collections.Generic.IEqualityComparer{Clusterizer.ClusterPair}" />
         public class EqualityComparer : IEqualityComparer<ClusterPair>
-        {
-            //see IEqualyComparer_Example in ProgrammingTips folder for better understanding of this concept
-            //the implementation of the IEqualityComparer is necessary because ClusterPair has two keys (cluster1.Id and cluster2.Id in ClusterPair) to compare
+        {  
+            // As ClusterPair is defined class, we need to specify its equality for using in Dictionary as keys
 
+            /// <summary>
+            /// Determines whether the specified objects are equal.
+            /// </summary>
+            /// <param name="x">The first object of type <paramref name="T" /> to compare.</param>
+            /// <param name="y">The second object of type <paramref name="T" /> to compare.</param>
+            /// <returns>
+            ///   <see langword="true" /> if the specified objects are equal; otherwise, <see langword="false" />.
+            /// </returns>
             public bool Equals(ClusterPair x, ClusterPair y)
             {
-                return x._cluster1.Id == y._cluster1.Id && x._cluster2.Id == y._cluster2.Id;
+                return x.Cluster1.ID == y.Cluster1.ID && x.Cluster2.ID == y.Cluster2.ID;
             }
 
+            /// <summary>
+            /// Returns a hash code for this instance.
+            /// </summary>
+            /// <param name="x">The x.</param>
+            /// <returns>
+            /// A hash code for this instance, suitable for use in hashing algorithms and data structures like a hash table. 
+            /// </returns>
             public int GetHashCode(ClusterPair x)
             {
-                return x._cluster1.Id ^ x._cluster2.Id;
+                return x.Cluster1.ID ^ x.Cluster2.ID;
             }
         }
         #endregion

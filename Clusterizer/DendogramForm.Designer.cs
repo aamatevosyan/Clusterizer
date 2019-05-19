@@ -28,19 +28,19 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.drawingArea = new System.Windows.Forms.PictureBox();
-            ((System.ComponentModel.ISupportInitialize)(this.drawingArea)).BeginInit();
+            this.dendogramControl = new System.Windows.Forms.PictureBox();
+            ((System.ComponentModel.ISupportInitialize)(this.dendogramControl)).BeginInit();
             this.SuspendLayout();
             // 
-            // drawingArea
+            // dendogramControl
             // 
-            this.drawingArea.BackColor = System.Drawing.SystemColors.Control;
-            this.drawingArea.Location = new System.Drawing.Point(0, 0);
-            this.drawingArea.Name = "drawingArea";
-            this.drawingArea.Size = new System.Drawing.Size(872, 607);
-            this.drawingArea.TabIndex = 0;
-            this.drawingArea.TabStop = false;
-            this.drawingArea.Paint += new System.Windows.Forms.PaintEventHandler(this.drawingArea_Paint);
+            this.dendogramControl.BackColor = System.Drawing.SystemColors.Control;
+            this.dendogramControl.Location = new System.Drawing.Point(0, 0);
+            this.dendogramControl.Name = "dendogramControl";
+            this.dendogramControl.Size = new System.Drawing.Size(872, 607);
+            this.dendogramControl.TabIndex = 0;
+            this.dendogramControl.TabStop = false;
+            this.dendogramControl.Paint += new System.Windows.Forms.PaintEventHandler(this.dendogramControl_Paint);
             // 
             // DendrogramForm
             // 
@@ -48,19 +48,21 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.AutoScroll = true;
             this.ClientSize = new System.Drawing.Size(888, 568);
-            this.Controls.Add(this.drawingArea);
+            this.Controls.Add(this.dendogramControl);
             this.Name = "DendrogramForm";
-            this.Text = "AggloCluster Dendrogram";
+            this.ShowIcon = false;
+            this.Text = "Дендограмма";
+            this.TopMost = true;
             this.WindowState = System.Windows.Forms.FormWindowState.Maximized;
-            this.SizeChanged += new System.EventHandler(this.DendrogramFrm_SizeChanged);
-            this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.DendrogramForm_KeyDown);
-            ((System.ComponentModel.ISupportInitialize)(this.drawingArea)).EndInit();
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.DendrogramForm_FormClosing);
+            this.SizeChanged += new System.EventHandler(this.DendrogramForm_SizeChanged);
+            ((System.ComponentModel.ISupportInitialize)(this.dendogramControl)).EndInit();
             this.ResumeLayout(false);
 
         }
 
         #endregion
 
-        private System.Windows.Forms.PictureBox drawingArea;
+        private System.Windows.Forms.PictureBox dendogramControl;
     }
 }

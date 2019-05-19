@@ -5,198 +5,146 @@ using System.Linq;
 namespace Clusterizer
 {
     /// <summary>
-    /// Класс Кластер
+    /// Data structure for presenting cluster
     /// </summary>
-    [Serializable]
     public class Cluster
     {
-        #region Поля        
+        #region Fields        
         /// <summary>
-        /// Синглтог кластер реализованный как множество паттернов
+        /// Gets or sets the sub clusters.
         /// </summary>
-        private HashSet<Pattern> _singletonCluster;
-        /// <summary>
-        /// Подкластеры(дети) кластера
-        /// </summary>
-        private HashSet<Cluster> _subClusters;
-        /// <summary>
-        /// Список всех паттернов кластера и его детей
-        /// </summary>
-        public List<Pattern> _patternList;
+        /// <value>
+        /// The sub clusters.
+        /// </value>
+        public List<Cluster> SubClusters { get; set; }
 
-        public Pattern _centroid;
+        /// <summary>
+        /// Gets or sets the data points.
+        /// </summary>
+        /// <value>
+        /// The data points.
+        /// </value>
+        public List<DataPoint> DataPoints { get; set; }
+
+        /// <summary>
+        /// Gets or sets the centroid.
+        /// </summary>
+        /// <value>
+        /// The centroid.
+        /// </value>
+        public DataPoint Centroid { get; set; }
         #endregion
 
-        #region Свойства        
+        #region Properties        
         /// <summary>
-        /// ID Кластера
+        /// Gets or sets the identifier.
         /// </summary>
-        public int Id { get; set; }
+        /// <value>
+        /// The identifier.
+        /// </value>
+        public int ID { get; set; }
+
         /// <summary>
-        /// Количество паттернов в синглтон кластере
+        /// Gets the quantity of data points.
         /// </summary>
-        public int QuantityOfPatterns => _singletonCluster.Count;
+        /// <value>
+        /// The quantity of data points.
+        /// </value>
+        public int QuantityOfDataPoints => DataPoints.Count;
+
+
         /// <summary>
-        /// Общее количество паттернов в кластере
+        /// Gets the quantity of sub clusters.
         /// </summary>
-        public int TotalQuantityOfPatterns { get; set; }
-        /// <summary>
-        /// Количество подкластеров кластера
-        /// </summary>
-        public int QuantityOfSubClusters => _subClusters.Count;
+        /// <value>
+        /// The quantity of sub clusters.
+        /// </value>
+        public int QuantityOfSubClusters => SubClusters.Count;
         #endregion
 
 
-        #region Конструктор        
+        #region Конструктор                
         /// <summary>
-        /// Конструктор без параметров <see cref="Cluster"/> class.
+        /// Initializes a new instance of the <see cref="Cluster"/> class.
         /// </summary>
         public Cluster()
         {
-            _singletonCluster = new HashSet<Pattern>();
-            _subClusters = new HashSet<Cluster>();
+            DataPoints = new List<DataPoint>();
+            SubClusters = new List<Cluster>();
         }
         #endregion
 
-        #region Методы        
+        #region Methods                    
         /// <summary>
-        /// Добавляет паттерн в синглтон кластер
+        /// Adds the data point.
         /// </summary>
-        /// <param name="pattern">Паттерн</param>
-        public void AddPattern(Pattern pattern)
+        /// <param name="dataPoint">The data point.</param>
+        public void AddDataPoint(DataPoint dataPoint)
         {
-            _singletonCluster.Add(pattern);
+            DataPoints.Add(dataPoint);
         }
+
         /// <summary>
-        /// Возвращает массив со всеми паттернами синглтон кластера
-        /// </summary>
-        public Pattern[] GetPatterns()
-        {
-            return _singletonCluster.ToArray<Pattern>();
-        }
-        /// <summary>
-        /// Возвращает паттерн под заданым индексом в синглтон кластере
-        /// </summary>
-        /// <param name="index">Индекс</param>
-        public Pattern GetPattern(int index)
-        {
-            return _singletonCluster.ElementAt(index);
-        }
-        /// <summary>
-        /// Добавляет подкластер в кластер
+        /// Adds the sub cluster.
         /// </summary>
         /// <param name="subCluster">The sub cluster.</param>
         public void AddSubCluster(Cluster subCluster)
         {
-            _subClusters.Add(subCluster);
+            SubClusters.Add(subCluster);
+            DataPoints.AddRange(subCluster.DataPoints);
         }
+
         /// <summary>
-        /// Возвращает массив подкластеров
+        /// Gets the sub cluster.
         /// </summary>
+        /// <param name="index">The index.</param>
         /// <returns></returns>
-        public Cluster[] GetSubClusters()
-        {
-            return _subClusters.ToArray<Cluster>();
-        }
-        /// <summary>
-        /// Возвращает подкластер под заданым индексом
-        /// </summary>
-        /// <param name="index">Индекс</param>
         public Cluster GetSubCluster(int index)
         {
-            return _subClusters.ElementAt(index);
+            return SubClusters.ElementAt(index);
         }
 
-        public int UpdateTotalQuantityOfPatterns()
-        {
-            //if cluster has subclustes, then calculate how many patterns there is in each subcluster
-            if (_subClusters.Count > 0)
-            {
-                TotalQuantityOfPatterns = 0;
-                foreach (Cluster subcluster in this.GetSubClusters())
-                    TotalQuantityOfPatterns = TotalQuantityOfPatterns + subcluster.UpdateTotalQuantityOfPatterns();
-            }
-
-            // if there is no subcluster, it is because is a singleton cluster (i.e., totalNumberOfPatterns = 1)
-            return TotalQuantityOfPatterns;
-        }
         /// <summary>
-        /// Возвращает список со всеми паттернами кластера
+        /// Sets the centroid of cluster.
         /// </summary>
-        /// <returns></returns>
-        public List<Pattern> GetAllPatterns()
-        {
-            _patternList = new List<Pattern>();
-            if (QuantityOfSubClusters == 0)
-                foreach (Pattern pattern in this.GetPatterns())
-                    _patternList.Add(pattern);
-            else
-                foreach (Cluster subCluster in this.GetSubClusters())
-                    _GetSubClusterPattern(subCluster);
-
-            TotalQuantityOfPatterns = _patternList.Count;
-   
-            return _patternList;
-        }
-        /// <summary>
-        /// Возвращает список со всеми паттернами подклассатера
-        /// </summary>
-        /// <returns></returns>
-        private void _GetSubClusterPattern(Cluster subCluster)
-        {
-            if (subCluster.QuantityOfSubClusters == 0)
-                foreach (Pattern pattern in subCluster.GetPatterns())
-                    _patternList.Add(pattern);
-            else
-                foreach (Cluster _subCluster in subCluster.GetSubClusters())
-                    _GetSubClusterPattern(_subCluster);
-        }
-
         public void SetCentroid()
         {
-            double attributeSum = 0;
-            double attributeMean = 0;
+            int dataPointsCount = DataPoints[0].Count;
+            double[] tmpPoints = Enumerable.Repeat(0.0, dataPointsCount).ToArray();
 
-            Pattern newCentroid;
-            double[] tmpPoints;
+            // sum all datapoints of cluster
+            foreach (var dataPoint in DataPoints)
+                for (int i = 0; i < dataPointsCount; i++)
+                    tmpPoints[i] += dataPoint[i];
 
-            _patternList = GetAllPatterns();
-            
-            int count = _patternList[0].Count;
-            tmpPoints = Enumerable.Repeat(0.0, count).ToArray();
-            foreach (var pattern in _patternList)
-            {
+            // get mean of datapoints
+            for (int i = 0; i < dataPointsCount; i++)
+                tmpPoints[i] /= QuantityOfDataPoints;
 
-                for (int i = 0; i < count; i++)
-                {
-                    tmpPoints[i] += pattern.GetPoint(i);
-                }
-            }
-
-            for (int i = 0; i < count; i++)
-            {
-                tmpPoints[i] /= TotalQuantityOfPatterns;
-            }
-
-            newCentroid = new Pattern(tmpPoints.ToList());
-            _centroid = newCentroid;
+            Centroid = new DataPoint(tmpPoints.ToList());
         }
 
-        public double getSumOfSquaredError(Distance.DistanceMetric dm)
+        /// <summary>
+        /// Gets the sum of squared error.
+        /// </summary>
+        /// <param name="distanceMetric">The distance metric.</param>
+        /// <returns>Sum of squared error of cluster</returns>
+        public double GetSumOfSquaredError(DistanceMetric distanceMetric)
         {
             double squaredErrorSum = 0;
             double distToCenter;
 
             //distance of each element to clustercenter
-            foreach (var pattern in _patternList)
+            foreach (var pattern in DataPoints)
             {
-                distToCenter = Distance.GetDistance(_centroid, pattern, dm);
+                distToCenter = Distance.GetDistance(Centroid, pattern, distanceMetric);
                 squaredErrorSum += Math.Pow(distToCenter, 2);
             }
             return squaredErrorSum;
 
         }
-
         #endregion
+
+
     }
 }

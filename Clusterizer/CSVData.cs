@@ -3,164 +3,159 @@ using System.Collections.Generic;
 using System.Data;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Clusterizer
 {
     /// <summary>
-    /// Класс данных
+    /// Class for working with input data
     /// </summary>
-    /// <seealso cref="System.ICloneable" />
-    [Serializable]
-    class CSVData : ICloneable
+    class CSVData
     {
         #region Свойства        
+
         /// <summary>
-        /// Количество полей
+        /// Gets the fields count.
         /// </summary>
-        public int FieldsCount => Headings.Length;
+        /// <value>
+        /// The fields count.
+        /// </value>
+        public int FieldsCount => StringHeadings.Length + NumericHeadings.Length;
+
         /// <summary>
-        /// Строки
+        /// Gets or sets the rows.
         /// </summary>
+        /// <value>
+        /// The rows.
+        /// </value>
         public List<CSVRow> Rows { get; set; }
+
         /// <summary>
-        /// Заголовки
-        /// </summary>
-        public string[] Headings { get; set; }
-        /// <summary>
-        /// Строковые столбцы
+        ///     Строковые столбцы
         /// </summary>
         public string[] StringHeadings { get; set; }
+
         /// <summary>
-        /// Столбцы показателей
+        /// Gets or sets the numeric headings.
         /// </summary>
+        /// <value>
+        /// The numeric headings.
+        /// </value>
         public string[] NumericHeadings { get; set; }
+
         /// <summary>
-        /// Массив значении
-        /// </summary>
-        public bool[] IsRealValue { get; set; }
-        /// <summary>
-        /// Таблица данных
+        /// The data set table
         /// </summary>
         public DataTable DataSetTable;
+
         /// <summary>
-        /// Путь файла
+        /// Gets or sets the file path.
         /// </summary>
+        /// <value>
+        /// The file path.
+        /// </value>
         public string FilePath { get; set; }
+
         /// <summary>
-        /// Стэк данных
+        /// The undo stack
         /// </summary>
-        public Stack<List<CSVRow>> BackupedRows;
+        public Stack<List<CSVRow>> UndoStack;
+
         /// <summary>
-        /// Максимальный размер стэка
+        /// The redo stack
         /// </summary>
-        const int MaxBackupCount = 15;
+        public Stack<List<CSVRow>> RedoStack;
+
+        /// <summary>
+        /// The maximum stack count
+        /// </summary>
+        private const int MaxStackCount = 30;
+
         #endregion
 
-        #region Конструктор        
+        #region Constructor                        
         /// <summary>
-        /// Конструктор без параметров класса <see cref="CSVData"/>.
+        /// Initializes a new instance of the <see cref="CSVData"/> class.
         /// </summary>
-        public CSVData()
+        /// <param name="filePath">The file path.</param>
+        public CSVData(string filePath)
         {
+            // initializes main components
+            FilePath = filePath;
             Rows = new List<CSVRow>();
             DataSetTable = new DataTable();
-            BackupedRows = new Stack<List<CSVRow>>();
+            UndoStack = new Stack<List<CSVRow>>();
+            RedoStack = new Stack<List<CSVRow>>();
+            StringHeadings = Tools.StringDataHeadings;
+            NumericHeadings = Tools.NumericDataHeadings;
+
+            // load data from file
+            using (var fileStream = new FileStream(filePath, FileMode.Open))
+            {
+                var streamReader = new StreamReader(fileStream);
+                string line;
+                // adds single line data to rows
+                while ((line = streamReader.ReadLine()) != null && line != "") Rows.Add(GetRowFromLine(line));
+            }
         }
+
         #endregion
 
+        #region Methods        
         /// <summary>
-        /// Задает заголовки показателей
+        /// Generates cluster set using selected datapoints
         /// </summary>
-        public void SetPointsHeadings()
+        /// <param name="isChosen">Is datapoint is chosen</param>
+        /// <returns></returns>
+        public ClusterSet GetClusterSet(bool[] isChosen)
         {
-            //List<string> points = new List<string>();
-            //for (int i = 0; i < IsRealValue.Length; i++)
-            //{
-            //    if (IsRealValue[i])
-            //        points.Add(Headings[i]);
-            //}
+            DataPoint _dataPoint;
+            Cluster _cluster;
+            var _clusterSet = new ClusterSet();
 
-            //NumericHeadings = points.ToArray();
-            NumericHeadings = Tools.DataPointsNames;
-        }
-
-        /// <summary>
-        /// Задает строковые показатели
-        /// </summary>
-        public void SetNamedHeadings()
-        {
-            //List<string> list = new List<string>();
-            //for (int i = 0; i < Headings.Length; i++)
-            //    if (!IsRealValue[i])
-            //        list.Add(Headings[i]);
-            //StringHeadings = list.ToArray();
-            StringHeadings = Tools.AdditionalDataNames;
-        }
-
-        /// <summary>
-        /// Создает матрицу паттернов
-        /// </summary>
-        /// <param name="isChosen">Выбранные показатели</param>
-        public PatternMatrix GetPatternMatrix(bool[] isChosen)
-        {
-            PatternMatrix _patternMatrix = new PatternMatrix();
-            Pattern _pattern;
-            int _patternIndex = 0;
-
-            for (int i = 0; i < Rows.Count; i++)
+            // generates datapoint
+            for (var i = 0; i < Rows.Count; i++)
             {
-                _pattern = new Pattern();
-                _pattern.Id = i;
-                for (int j = 0; j < Rows[i].Fields.Count; j++)
-                    if (IsRealValue[j])
-                    {
-                        int startIndex = j;
-                        for (; j < Rows[i].Fields.Count; j++)
-                        {
-                            if (isChosen[j - startIndex])
-                                _pattern.Add(double.Parse(Rows[i].Fields[j]));
-                        }
-                        //_pattern.Add(double.Parse(Rows[i].fields[j]));
-                    }
+                _dataPoint = new DataPoint();
+                _dataPoint.ID = i;
+                // gets all points of datapoint
+                for (var j = StringHeadings.Length; j < FieldsCount; j++)
+                    _dataPoint.Add(double.Parse(Rows[i][j]));
 
-                _patternMatrix.AddPattern(_pattern);
+                // new cluster
+                _cluster = new Cluster();
+                _cluster.ID = i;
+                _cluster.AddDataPoint(_dataPoint);
+                _cluster.SetCentroid();
+
+                // add to set
+                _clusterSet.AddCluster(_cluster);
             }
 
-            return _patternMatrix;
+            return _clusterSet;
         }
 
         /// <summary>
-        /// Задает заголовки
+        /// Gets the row from line.
         /// </summary>
-        /// <param name="line">Строка</param>
-        public void SetHeadingsFromLine(string line)
-        {
-            var headings = line.Split(new char[] {';'}, StringSplitOptions.RemoveEmptyEntries).Select(x => x.Trim(new char[] {' ', '\"'})).ToArray();
-            Headings = headings;
-
-        }
-
-        /// <summary>
-        /// Получает Row
-        /// </summary>
-        /// <param name="line">Строка</param>
+        /// <param name="line">The line.</param>
         /// <returns></returns>
-        /// <exception cref="InvalidDataException">Исходный файл некорректен</exception>
+        /// <exception cref="InvalidDataException"></exception>
         public CSVRow GetRowFromLine(string line)
         {
-            var fields = line.Split(new char[] { ';' }, StringSplitOptions.RemoveEmptyEntries).Select(x => x.Trim(new char[] { ' ', '\"' })).ToList();
+            // gets all fields from line
+            var fields = line.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries).Select(x => x.Trim(' ', '\"'))
+                .ToList();
+            // checks for correctness
             if (fields.Count != FieldsCount)
-                throw new InvalidDataException("Исходный файл некорректен");
-            CSVRow csvRow = new CSVRow(fields);
+                throw new InvalidDataException();
+            var csvRow = new CSVRow(fields);
             return csvRow;
         }
 
         /// <summary>
-        /// Получает строку Row
+        /// Gets the CSV line from row.
         /// </summary>
-        /// <param name="csvRow">Row</param>
+        /// <param name="csvRow">The CSV row.</param>
         /// <returns></returns>
         public string GetCSVLineFromRow(CSVRow csvRow)
         {
@@ -168,40 +163,7 @@ namespace Clusterizer
         }
 
         /// <summary>
-        /// Получает строку заголовок
-        /// </summary>
-        /// <returns></returns>
-        public string GetCSVLineFromHeadings()
-        {
-            return string.Join(";", Headings);
-        }
-
-        /// <summary>
-        /// Резервирует Rows
-        /// </summary>
-        public void BackupRows()
-        {
-            if (BackupedRows.Count != MaxBackupCount)
-            {
-                BackupedRows.Push(Rows.GetRange(0, Rows.Count));
-            }
-        }
-
-        /// <summary>
-        /// Востанавливает Rows
-        /// </summary>
-        public void RestoreRows()
-        {
-            if (BackupedRows.Count != 0)
-            {
-                Rows = BackupedRows.Peek();
-                BackupedRows.Pop();
-                UpdateData();
-            }
-        }
-
-        /// <summary>
-        /// Обнавляет Rows
+        /// Updates the rows.
         /// </summary>
         public void UpdateRows()
         {
@@ -210,53 +172,25 @@ namespace Clusterizer
             foreach (DataRow row in DataSetTable.Rows)
             {
                 fieldList = new List<string>();
-                for (int i = 0; i < row.ItemArray.Length; i++)
+                for (var i = 0; i < row.ItemArray.Length; i++)
                     fieldList.Add(row[i].ToString());
                 Rows.Add(new CSVRow(fieldList));
             }
-            Console.WriteLine(Rows.Count);
         }
 
         /// <summary>
-        /// Сортирует значения по столбцу
-        /// </summary>
-        /// <param name="index">Индекс</param>
-        public void Sort(int index)
-        {
-            BackupRows();
-            var sorted = Rows.OrderBy(row => row.Fields[index]);
-            Rows = sorted.ToList();
-            UpdateData();
-        }
-
-        /// <summary>
-        /// Фильтрует стоблцы
-        /// </summary>
-        /// <param name="expression">Значения</param>
-        /// <param name="index">Индекс</param>
-        public void Filter(string expression, int index)
-        {
-            BackupRows();
-            var filtered = Rows.FindAll(row => row.Fields[index].Contains(expression));
-            Rows = filtered.ToList();
-            UpdateData();
-        }
-
-        /// <summary>
-        /// Создает заголовки столбцов
+        /// Creates the data table columns.
         /// </summary>
         public void CreateDataTableColumns()
         {
-            Type type;
-            for (int i = 0; i < FieldsCount; i++)
-            {
-                type = (IsRealValue[i]) ? typeof(double) : typeof(string);
-                DataSetTable.Columns.Add(Headings[i], type);
-            }
+            for (var i = 0; i < StringHeadings.Length; i++) DataSetTable.Columns.Add(StringHeadings[i], typeof(string));
+
+            for (var i = 0; i < NumericHeadings.Length; i++)
+                DataSetTable.Columns.Add(NumericHeadings[i], typeof(double));
         }
 
         /// <summary>
-        /// Создает таблицу данных
+        /// Creates the data table.
         /// </summary>
         public void CreateDataTable()
         {
@@ -266,68 +200,147 @@ namespace Clusterizer
         }
 
         /// <summary>
-        /// Обновляет данные
+        /// Updates the data.
         /// </summary>
         public void UpdateData()
         {
             DataSetTable.Clear();
-            foreach (var row in Rows)
-            {
-                DataSetTable.Rows.Add(row.Fields.ToArray());
-            }
+            foreach (var row in Rows) DataSetTable.Rows.Add(row.Fields.ToArray());
         }
 
         /// <summary>
-        /// Читает из файла
+        /// Gets the chosen data point names.
         /// </summary>
-        /// <param name="filePath">Путь файла</param>
+        /// <param name="isChosen">The is chosen.</param>
         /// <returns></returns>
-        public static CSVData ReadFromCSV(string filePath)
+        public string[] GetChosenDataPointNames(bool[] isChosen)
         {
-            CSVData data = new CSVData();
-            using (FileStream fileStream = new FileStream(filePath, FileMode.Open))
-            {
-                data.FilePath = filePath;
-                data.IsRealValue = Tools.isDataPoint;
-                StreamReader streamReader = new StreamReader(fileStream);
-
-                //data.SetHeadingsFromLine(streamReader.ReadLine());
-                data.Headings = Tools.Headings;
-                string line;
-                while ((line = streamReader.ReadLine()) != null && line != "")
-                {
-                    data.Rows.Add(data.GetRowFromLine(line));
-                }
-            }
-
-            return data;
+            var tmpList = new List<string>();
+            for (var i = 0; i < isChosen.Length; i++)
+                if (isChosen[i])
+                    tmpList.Add(NumericHeadings[i]);
+            return tmpList.ToArray();
         }
 
         /// <summary>
-        /// Сохраняет в файл
+        /// Saves data to CSV file.
         /// </summary>
         /// <param name="data">The data.</param>
         /// <param name="filePath">The file path.</param>
         public static void SaveToCSV(CSVData data, string filePath)
         {
-            using (FileStream fileStream = new FileStream(filePath, FileMode.Create))
+            using (var fileStream = new FileStream(filePath, FileMode.Create))
             {
-                StreamWriter streamWriter = new StreamWriter(fileStream);
-                streamWriter.WriteLine(data.GetCSVLineFromHeadings());
-                streamWriter.AutoFlush = true;
-                foreach (var row in data.Rows)
-                {
-                    streamWriter.WriteLine(data.GetCSVLineFromRow(row));
-                }
+                var streamWriter = new StreamWriter(fileStream);
+                foreach (var row in data.Rows) streamWriter.WriteLine(data.GetCSVLineFromRow(row));
+                streamWriter.Flush();
+            }
+        }
+
+
+        /// <summary>
+        /// Sorts the specified index.
+        /// </summary>
+        /// <param name="index">The index.</param>
+        /// <param name="isAscending">if set to <c>true</c> [is ascending].</param>
+        public void Sort(int index, bool isAscending)
+        {
+            SaveToStack();
+            IEnumerable<CSVRow> sorted;
+            if (isAscending)
+                sorted = Rows.OrderBy(row => row.Fields[index]);
+            else
+            {
+                sorted = Rows.OrderByDescending(row => row.Fields[index]);
+            }
+
+            Rows = sorted.ToList();
+            UpdateData();
+        }
+
+        /// <summary>
+        /// Filters the specified expression.
+        /// </summary>
+        /// <param name="expression">The expression.</param>
+        /// <param name="index">The index.</param>
+        /// <param name="selectedOperation">The selected operation.</param>
+        public void Filter(string expression, int index, int selectedOperation)
+        {
+            SaveToStack();
+            List<CSVRow> filteredList;
+            switch (selectedOperation)
+            {
+                case 0:
+                    filteredList = Rows.FindAll(row => row.Fields[index].Contains(expression));
+                    break;
+                case 1:
+                    filteredList = Rows.FindAll(row => double.Parse(row.Fields[index]) >= double.Parse(expression));
+                    break;
+                case 2:
+                    filteredList = Rows.FindAll(row => double.Parse(row.Fields[index]) <= double.Parse(expression));
+                    break;
+                case 3:
+                    filteredList = Rows.FindAll(row => double.Parse(row.Fields[index]) > double.Parse(expression));
+                    break;
+                default:
+                    filteredList = Rows.FindAll(row => double.Parse(row.Fields[index]) < double.Parse(expression));
+                    break;
+            }
+
+            Rows = filteredList;
+            UpdateData();
+        }
+
+        /// <summary>
+        /// Redoes this instance.
+        /// </summary>
+        public void Redo()
+        {
+            if (RedoStack.Count != 0 && UndoStack.Count < MaxStackCount)
+            {
+                UndoStack.Push(Rows.GetRange(0, Rows.Count));
+                Rows = RedoStack.Pop();
+                UpdateData();
             }
         }
 
         /// <summary>
-        /// Клонирует класс
+        /// Undoes this instance.
         /// </summary>
-        public object Clone()
+        public void Undo()
         {
-            return this.MemberwiseClone();
+            if (UndoStack.Count != 0 && RedoStack.Count < MaxStackCount)
+            {
+                RedoStack.Push(Rows.GetRange(0, Rows.Count));
+                Rows = UndoStack.Pop();
+                UpdateData();
+            }
         }
+
+        /// <summary>
+        /// Saves to stack.
+        /// </summary>
+        public void SaveToStack()
+        {
+            if (UndoStack.Count < MaxStackCount)
+            {
+                RedoStack.Clear();
+                UndoStack.Push(Rows.GetRange(0, Rows.Count));
+            }
+        }
+
+        #endregion
+
+
+
+
+
+
+
+
+
+
+
+
     }
 }

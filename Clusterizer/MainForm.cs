@@ -16,494 +16,682 @@ using Clusterizer.Properties;
 namespace Clusterizer
 {
     /// <summary>
-    /// Класс основной формы программы
+    /// The application's Main Form
     /// </summary>
     /// <seealso cref="System.Windows.Forms.Form" />
     public partial class MainForm : Form
     {
-        #region Поля        
+        #region Fields        
         /// <summary>
-        /// Данные
+        /// The data points before normalization
         /// </summary>
-        private CSVData _data;
-        /// <summary>
-        /// Кластеры
-        /// </summary>
-        private Clusters _clusters;
-
-        private bool[] isChosen;
+        private List<DataPoint> _dataPointsBeforeNormalization;
         #endregion
 
-        #region Конструктор        
+
+        #region Constructor       
         /// <summary>
-        /// Конструктор без параметров класса <see cref="MainForm"/>.
+        /// Initializes a new instance of the <see cref="MainForm"/> class.
         /// </summary>
         public MainForm()
         {
             InitializeComponent();
             ResetComponents();
-            Settings.Default.Save();
-            Settings.Default.Upgrade();
+            ResetData();
         }
+
         #endregion
 
 
-        #region Методы        
+        #region Methods            
         /// <summary>
-        /// Сбрасывает компоненты
+        /// Resets the components.
         /// </summary>
-        public void ResetComponents()
+        private void ResetComponents()
         {
-            dataGridView.DataSource = null;
-            filterToolStripComboBox.Items.Clear();
-            filterToolStripComboBox.SelectedItem = null;
-            sortToolStripComboBox.ComboBox.Items.Clear();
-            sortToolStripComboBox.SelectedItem = null;
-            //listBox1.Items.Clear();
-            treeView.Nodes.Clear();
+            // deletes temporary files
+            DeleteTempFiles();
+
+            // resets all UI components
+            dataTableGridView.DataSource = null;
+
+            filteredColumnSelectComboBox.Items.Clear();
+            filteredColumnSelectComboBox.SelectedItem = null;
+            sortColumnSelectComboBox.Items.Clear();
+            sortColumnSelectComboBox.SelectedItem = null;
+            operandSelectComboBox.Items.Clear();
+
+            clusterTreeView.Nodes.Clear();
+            clusterTableGridView.Rows.Clear();
+            clusteringToolStrip.Enabled = false;
+            searchExpressionTextBox.Text = "";
+
+            // Disables using clustering
             DisableClustering();
         }
 
         /// <summary>
-        /// Сбрасывает данные
+        /// Resets the data.
         /// </summary>
-        public void ResetData()
+        private void ResetData()
         {
-            _data = null;
-            _clusters = null;
+            Tools.Data = null;
+            Tools.Clusters = null;
+            Tools.isChosen = null;
         }
 
         /// <summary>
-        /// Зогружает данные
+        /// Restores the cluster set before normalization.
+        /// </summary>
+        /// <param name="cluster">The cluster.</param>
+        private void RestoreClusterSet(Cluster cluster)
+        {
+            for (var i = 0; i < cluster.DataPoints.Count; i++)
+                cluster.DataPoints[i] = _dataPointsBeforeNormalization[cluster.DataPoints[i].ID];
+
+            foreach (var subCluster in cluster.SubClusters)
+                RestoreClusterSet(subCluster);
+
+            cluster.SetCentroid();
+        }
+
+        /// <summary>
+        /// Deletes the temporary files.
+        /// </summary>
+        public void DeleteTempFiles()
+        {
+            if (File.Exists("tmpOverview.csv"))
+                File.Delete("tmpOverview.csv");
+            if (File.Exists("tmpTable.csv"))
+                File.Delete("tmpTable.csv");
+            if (File.Exists("tmpDendogramm.png"))
+                File.Delete("tmpDendogramm.png");
+        }
+
+        /// <summary>
+        /// Loads the data.
         /// </summary>
         public void LoadData()
         {
+            // resets components
             ResetComponents();
 
-            dataGridView.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.None;
-            dataGridView.ColumnHeadersVisible = false;
-            dataGridView.DataSource = _data.DataSetTable;
-            dataGridView.ColumnHeadersVisible = true;
-            dataGridView.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.AllCells;
-            dataGridView.Refresh();
+            // loads data table
+            dataTableGridView.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.None;
+            dataTableGridView.ColumnHeadersVisible = false;
+            dataTableGridView.DataSource = Tools.Data.DataSetTable;
+            dataTableGridView.ColumnHeadersVisible = true;
+            dataTableGridView.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.DisplayedCells;
+            dataTableGridView.Refresh();
 
-            filterToolStripComboBox.Items.AddRange(_data.StringHeadings);
-            sortToolStripComboBox.Items.AddRange(_data.StringHeadings);
+            // load filter and sort fields
+            filteredColumnSelectComboBox.Items.AddRange(Tools.Data.StringHeadings);
+            filteredColumnSelectComboBox.Items.AddRange(Tools.Data.NumericHeadings);
+            sortColumnSelectComboBox.Items.AddRange(Tools.Data.StringHeadings);
 
-            filterToolStripComboBox.SelectedIndex = 0;
-            sortToolStripComboBox.SelectedIndex = 0;
+            filteredColumnSelectComboBox.SelectedIndex = 0;
+            sortColumnSelectComboBox.SelectedIndex = 0;
 
+            // enables clustering
             EnableClustering();
         }
 
         /// <summary>
-        /// Обновляет изминения
+        /// Builds the result table.
         /// </summary>
-        public void UpdateChanges()
+        private void BuildResultTable()
         {
-            _data.UpdateRows();
-        }
+            // resets result table
+            clusterTableGridView.Rows.Clear();
+            clusterTableGridView.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.None;
+            clusterTableGridView.ColumnHeadersVisible = false;
 
-        /// <summary>
-        /// Заполняет ListBox
-        /// </summary>
-        private void FillListBox()
-        {
-            resultGridView.Rows.Clear();
-            resultGridView.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.None;
-            resultGridView.ColumnHeadersVisible = false;
-            for (int i = 0; i < _clusters._clusters.Count; i++)
+            // saves table to temp file
+            using (var fileStream = new FileStream("tmpTable.csv", FileMode.Create))
             {
-                int baseId = _clusters.GetCluster(i).Id;
-                foreach (var pattern in _clusters.GetCluster(i)._patternList)
+                var streamWriter = new StreamWriter(fileStream);
+                // gets table from clusters
+                for (var i = 0; i < Tools.Clusters.ClustersList.Count; i++)
                 {
-                    resultGridView.Rows.Add(_data.Rows[pattern.Id].Fields[0], $"Cluster{pattern.Id}",
-                        $"Cluster{baseId}");
+                    var baseId = Tools.Clusters.GetCluster(i).ID;
+                    foreach (var pattern in Tools.Clusters.GetCluster(i).DataPoints)
+                    {
+                        clusterTableGridView.Rows.Add(Tools.Data.Rows[pattern.ID].Fields[0], $"Cluster{pattern.ID}",
+                            $"Cluster{baseId}");
+                        streamWriter.WriteLine(
+                            $"{Tools.Data.Rows[pattern.ID].Fields[0]};Cluster{pattern.ID};Cluster{baseId}");
+                    }
                 }
+
+                streamWriter.Flush();
             }
 
+            // load data to table
+            clusterTableGridView.ColumnHeadersVisible = true;
+            clusterTableGridView.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.AllCells;
 
-            //dataGridView.DataSource = _data.DataSetTable;
-            resultGridView.ColumnHeadersVisible = true;
-            resultGridView.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.AllCells;
-
-            resultGridView.Refresh();
-            //listBox1.Items.Clear();
-            //for (int i = 0; i < _data.Rows.Count; i++)
-            //    listBox1.Items.Add($"Cluster{i} : \"{_data.Rows[i].Fields[0]}\"");
+            clusterTableGridView.Refresh();
+            exportClusterTableToolStripMenuItem.Enabled = true;
         }
 
         /// <summary>
-        /// Строит TreeView.
+        /// Builds the TreeView.
         /// </summary>
         private void BuildTreeView()
         {
-            treeView.Nodes.Clear();
-            foreach (var cluster in _clusters._clusters)
+            clusterTreeView.Nodes.Clear();
+            foreach (var cluster in Tools.Clusters.ClustersList)
             {
-                TreeNode rootNode = treeView.Nodes.Add($"Cluster{cluster.Id}");
-                this.AddNodes(cluster.GetSubClusters(), rootNode);
+                var rootNode = clusterTreeView.Nodes.Add($"Cluster{cluster.ID}");
+                AddNodes(cluster.SubClusters.ToArray(), rootNode);
             }
-            
-            treeView.ExpandAll();
+
+            clusterTreeView.CollapseAll();
         }
 
         /// <summary>
-        /// Добавляет деревья
+        /// Adds the nodes to node
         /// </summary>
-        /// <param name="clusters">Кластеры</param>
-        /// <param name="node">Дерево</param>
+        /// <param name="clusters">The clusters.</param>
+        /// <param name="node">The node.</param>
         private void AddNodes(Cluster[] clusters, TreeNode node)
         {
             TreeNode childNode;
             foreach (var cluster in clusters)
             {
-                childNode = node.Nodes.Add($"Cluster{cluster.Id}");
+                childNode = node.Nodes.Add($"Cluster{cluster.ID}");
                 if (cluster.QuantityOfSubClusters > 0)
-                    this.AddNodes(cluster.GetSubClusters(), childNode);
+                    AddNodes(cluster.SubClusters.ToArray(), childNode);
             }
         }
 
         /// <summary>
-        /// Отключает кластеризацию
+        /// Disables the clustering.
         /// </summary>
         private void DisableClustering()
         {
             tabControl.TabPages[1].Enabled = false;
             clusterizationToolStripMenuItem.Enabled = false;
             buildDendrogramToolStripMenuItem.Enabled = false;
+            showClusterOverviewToolStripMenuItem.Enabled = false;
+            exportToolStripMenuItem.Enabled = false;
+            exportClusterDendogrammToolStripMenuItem.Enabled = false;
+            exportClusterOverviewToolStripMenuItem.Enabled = false;
+            exportClusterTableToolStripMenuItem.Enabled = false;
         }
 
         /// <summary>
-        /// Включает кластеризацию
+        /// Enables the clustering.
         /// </summary>
         private void EnableClustering()
         {
             tabControl.TabPages[1].Enabled = true;
             clusterizationToolStripMenuItem.Enabled = true;
+            clusteringToolStrip.Enabled = true;
         }
+
         #endregion
 
-        #region События
+        #region Events
+
+        #region Menu - File
         /// <summary>
-        /// Действие при нажатии на кнопку openToolStripMenuItem
+        /// Handles the Click event of the openToolStripMenuItem control.
         /// </summary>
-        /// <param name="sender">Сама кнопка</param>
-        /// <param name="e">Аргумент события <see cref="EventArgs"/></param>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
+        /// <exception cref="Clusterizer.CustomException">Проверьте корректность данных и доступность файла. - Ошибка при открытии входных данных</exception>
         private void openToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            //OpenForm openForm = new OpenForm();
-            //openForm.ShowDialog();
-            //_data = openForm.data;
-            //if (_data != null)
-            //    LoadData();
             try
             {
-
-                OpenFileDialog openFileDialog = new OpenFileDialog();
+                var openFileDialog = new OpenFileDialog();
                 openFileDialog.Title = "Открыть файл";
                 openFileDialog.Filter = "CSV File(*.csv)|*.csv";
+                // check if user clicked ok
                 if (openFileDialog.ShowDialog() == DialogResult.OK)
                 {
-                    string filePath = openFileDialog.FileName;
-                    //filePathtextBox.Text = filePath;
-                    //var task = Task.Run(() =>
-                    //{
-                    //    _data = CSVData.ReadFromCSV(filePath);
-                    //});
-                    //task.Wait();
-                    _data = CSVData.ReadFromCSV(filePath);
-                    _data.SetPointsHeadings();
-                    _data.SetNamedHeadings();
+                    var filePath = openFileDialog.FileName;
+                    var _data = new CSVData(filePath);
                     _data.CreateDataTable();
+                    Tools.Data = _data;
                     LoadData();
                 }
-
             }
             catch
             {
-                MessageBox.Show("Произошла ошибка при имспорте файла. Проверьте корректность файла.", "Ошибка импорта.", MessageBoxButtons.OK,
-                    MessageBoxIcon.Error);
+                throw new CustomException("Проверьте корректность данных и доступность файла.", "Ошибка при открытии входных данных");
             }
         }
 
         /// <summary>
-        /// Действие при заполнении значении по умолчанию в dataGridView
+        /// Handles the Click event of the saveToolStripMenuItem control.
         /// </summary>
-        /// <param name="sender">dataGridView</param>
-        /// <param name="e">Аргумент события <see cref="DataGridViewDataErrorEventArgs"/></param>
-        private void dataGridView_DefaultValuesNeeded(object sender, DataGridViewRowEventArgs e)
-        {
-            for (int i = 0; i < _data.IsRealValue.Length; i++)
-                if (_data.IsRealValue[i])
-                    e.Row.Cells[i].Value = 0.0;
-                else
-                    e.Row.Cells[i].Value = "Строка";
-        }
-
-        /// <summary>
-        /// Действие при ошыбке ввода значении в dataGridView
-        /// </summary>
-        /// <param name="sender">dataGridView</param>
-        /// <param name="e">Аргумент события <see cref="DataGridViewDataErrorEventArgs"/></param>
-        private void dataGridView_DataError(object sender, DataGridViewDataErrorEventArgs e)
-        {
-            MessageBox.Show("Введено не корректное значение.", "Ошибка при редактировании таблицы.",
-                MessageBoxButtons.OK, MessageBoxIcon.Error);
-            e.ThrowException = false;
-            e.Cancel = false;
-        }
-
-        /// <summary>
-        /// Действие при нажатии на кнопку sortToolStripButton
-        /// </summary>
-        /// <param name="sender">Сама кнопка</param>
-        /// <param name="e">Аргумент события <see cref="EventArgs"/></param>
-        private void sortToolStripButton_Click(object sender, EventArgs e)
-        {
-            if (_data != null)
-                _data.Sort(sortToolStripComboBox.SelectedIndex);
-        }
-
-        /// <summary>
-        /// Действие при нажатии на кнопку filterStripButton
-        /// </summary>
-        /// <param name="sender">Сама кнопка</param>
-        /// <param name="e">Аргумент события <see cref="EventArgs"/></param>
-        private void filterStripButton_Click(object sender, EventArgs e)
-        {
-            if (_data != null)
-                _data.Filter(filterToolStripTextBox.Text, filterToolStripComboBox.SelectedIndex);
-        }
-
-        /// <summary>
-        /// Действие при нажатии на кнопку undoToolStripButton
-        /// </summary>
-        /// <param name="sender">Сама кнопка</param>
-        /// <param name="e">Аргумент события <see cref="EventArgs"/></param>
-        private void undoToolStripButton_Click(object sender, EventArgs e)
-        {
-            if (_data != null)
-                _data.RestoreRows();
-        }
-
-        /// <summary>
-        /// Действие при нажатии на кнопку clusterizeToolStripMenuItem
-        /// </summary>
-        /// <param name="sender">Сама кнопка</param>
-        /// <param name="e">Аргумент события <see cref="EventArgs"/></param>
-        private void clusterizeToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            Cursor.Current = Cursors.WaitCursor;
-
-            ClusterizeForm clusterizeForm = new ClusterizeForm(_data.NumericHeadings);
-            clusterizeForm._data = _data;
-            clusterizeForm.ShowDialog();
-
-            if (_data != null && clusterizeForm.isChosen != null)
-            {
-                Agnes agnes = new Agnes(_data.GetPatternMatrix(clusterizeForm.isChosen),
-                    clusterizeForm.distanceMetric, clusterizeForm.strategy);
-                isChosen = clusterizeForm.isChosen;
-                _clusters = agnes.ExecuteClustering(clusterizeForm.k);
-
-
-
-                this.BuildTreeView();
-                this.FillListBox();
-                tabControl.SelectTab(1);
-                buildDendrogramToolStripMenuItem.Enabled = true;
-            }
-            else
-            {
-                MessageBox.Show("Для кластеризации сначала откройте данные.", "Некорректные данные");
-            }
-        }
-
-
-
-        /// <summary>
-        /// Действие при нажатии на кнопку buildDendrogramToolStripMenuItem
-        /// </summary>
-        /// <param name="sender">Сама кнопка</param>
-        /// <param name="e">Аргумент события <see cref="EventArgs"/></param>
-        private void buildDendrogramToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            if (_clusters != null)
-            {
-                DendrogramForm dendrogramFrm = new DendrogramForm();
-                dendrogramFrm._clusters = _clusters;
-                dendrogramFrm.Setup();
-                dendrogramFrm.ShowDialog();
-            }
-        }
-
-        /// <summary>
-        /// Действие при нажатии на кнопку importToolStripMenuItem
-        /// </summary>
-        /// <param name="sender">Сама кнопка</param>
-        /// <param name="e">Аргумент события <see cref="EventArgs"/></param>
-        private void importToolStripMenuItem_Click(object sender, EventArgs e)
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
+        /// <exception cref="Clusterizer.CustomException">Произошла ошибка при сохранении файла. - Ошибка сохранения файла</exception>
+        private void saveToolStripMenuItem_Click(object sender, EventArgs e)
         {
             try
             {
-                BinaryFormatter binaryFormatter = new BinaryFormatter();
-                OpenFileDialog openFileDialog = new OpenFileDialog();
-                openFileDialog.Title = "Импорт файла";
-                openFileDialog.Filter = "CSF File(*.csf)|*.csf";
-                if (openFileDialog.ShowDialog() == DialogResult.OK)
+                if (Tools.Data != null)
                 {
-                    string filePath = openFileDialog.FileName;
-                    using (FileStream fileStream = new FileStream(filePath, FileMode.Open))
-                    {
-                        CSFContainer container = (CSFContainer)binaryFormatter.Deserialize(fileStream);
-                        _data = container.Data;
-                        _data.FilePath = Path.ChangeExtension(filePath, ".csv");
-                        _clusters = container.Clusters;
-                        LoadData();
-                        this.BuildTreeView();
-                        this.FillListBox();
-                        buildDendrogramToolStripMenuItem.Enabled = true;
-                    }
+                    // updates data
+                    Tools.Data.UpdateRows();
+                    // saves data
+                    CSVData.SaveToCSV(Tools.Data, Tools.Data.FilePath);
                 }
             }
             catch
             {
-                MessageBox.Show("Произошла ошибка при имспорте файла.", "Ошибка импорта.", MessageBoxButtons.OK,
-                    MessageBoxIcon.Error);
+                throw new CustomException("Произошла ошибка при сохранении файла.", "Ошибка сохранения файла");
             }
         }
 
         /// <summary>
-        /// Действие при нажатии на кнопку exportToolStripMenuItem
+        /// Handles the Click event of the saveAsToolStripMenuItem control.
         /// </summary>
-        /// <param name="sender">Сама кнопка</param>
-        /// <param name="e">Аргумент события <see cref="EventArgs"/></param>
-        private void exportToolStripMenuItem_Click(object sender, EventArgs e)
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
+        /// <exception cref="Clusterizer.CustomException">Произошла ошибка при сохранении файла. - Ошибка сохранения файла</exception>
+        private void saveAsToolStripMenuItem_Click(object sender, EventArgs e)
         {
             try
             {
-                BinaryFormatter binaryFormatter = new BinaryFormatter();
-                SaveFileDialog saveFileDialog = new SaveFileDialog();
-                saveFileDialog.Title = "Экспорт файла";
-                saveFileDialog.Filter = "CSF File(*.csf)|*.csf";
-                if (_data != null && _clusters != null && saveFileDialog.ShowDialog() == DialogResult.OK)
+                var saveFileDialog = new SaveFileDialog();
+                saveFileDialog.Title = "Сохранить как...";
+                saveFileDialog.Filter = "CSV File(*.csv)|*.csv";
+                // check if user selected ok
+                if (Tools.Data != null && saveFileDialog.ShowDialog() == DialogResult.OK)
                 {
-                    string filePath = saveFileDialog.FileName;
-                    using (FileStream fileStream = new FileStream(filePath, FileMode.Create))
-                    {
-                        UpdateChanges();
-                        CSFContainer csfContainer = new CSFContainer(_data, _clusters);
-                        binaryFormatter.Serialize(fileStream, csfContainer);
-                        tabControl.SelectTab(1);
-                    }
+                    var filePath = saveFileDialog.FileName;
+                    // updates data
+                    Tools.Data.UpdateRows();
+                    // saves data
+                    CSVData.SaveToCSV(Tools.Data, filePath);
                 }
             }
             catch
             {
-                MessageBox.Show("Произошла ошибка при экспорте файла.", "Ошибка экспорта.", MessageBoxButtons.OK,
-                    MessageBoxIcon.Error);
+                throw new CustomException("Произошла ошибка при сохранении файла.", "Ошибка сохранения файла");
             }
         }
 
         /// <summary>
-        /// Действие при нажатии на кнопку closeToolStripMenuItem
+        /// Handles the Click event of the closeToolStripMenuItem control.
         /// </summary>
-        /// <param name="sender">Сама кнопка</param>
-        /// <param name="e">Аргумент события <see cref="EventArgs"/></param>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
         private void closeToolStripMenuItem_Click(object sender, EventArgs e)
         {
             ResetData();
             ResetComponents();
         }
 
-        /// <summary>
-        /// Действие при нажатии на кнопку saveToolStripMenuItem
-        /// </summary>
-        /// <param name="sender">Сама кнопка</param>
-        /// <param name="e">Аргумент события <see cref="EventArgs"/></param>
-        private void saveToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            try
-            {
-                if (_data != null)
-                {
-                    _data.UpdateRows();
-                    CSVData.SaveToCSV(_data, _data.FilePath);
-                }
-            }
-            catch
-            {
-                MessageBox.Show("Произошла ошибка при сохранении файла.", "Ошибка сохранения.", MessageBoxButtons.OK,
-                    MessageBoxIcon.Error);
-            }
-        }
+
 
         /// <summary>
-        /// Действие при нажатии на кнопку saveAsToolStripMenuItem
+        /// Handles the Click event of the exitToolStripMenuItem control.
         /// </summary>
-        /// <param name="sender">Сама кнопка</param>
-        /// <param name="e">Аргумент события <see cref="EventArgs"/></param>
-        private void saveAsToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            try
-            {
-                SaveFileDialog saveFileDialog = new SaveFileDialog();
-                saveFileDialog.Title = "Сохранить как...";
-                saveFileDialog.Filter = "CSV File(*.csv)|*.csv";
-                if (_data != null && saveFileDialog.ShowDialog() == DialogResult.OK)
-                {
-                    string filePath = saveFileDialog.FileName;
-                    _data.UpdateRows();
-                    CSVData.SaveToCSV(_data, filePath);
-                }
-            }
-            catch
-            {
-                MessageBox.Show("Произошла ошибка при сохранении файла.", "Ошибка сохранения.", MessageBoxButtons.OK,
-                    MessageBoxIcon.Error);
-            }
-        }
-
-        /// <summary>
-        /// Действие при нажатии на кнопку exitToolStripMenuItem
-        /// </summary>
-        /// <param name="sender">Сама кнопка</param>
-        /// <param name="e">Аргумент события <see cref="EventArgs"/></param>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
         private void exitToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            this.Close();
+            Close();
         }
 
         /// <summary>
-        /// Действие при нажатии на кнопку aboutToolStripMenuItem
+        /// Handles the Click event of the exportClusterDendogrammToolStripMenuItem control.
         /// </summary>
-        /// <param name="sender">Сама кнопка</param>
-        /// <param name="e">Аргумент события <see cref="EventArgs"/></param>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
+        private void exportClusterDendogrammToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var saveFileDialog = new SaveFileDialog();
+            saveFileDialog.Title = "Сохранить как...";
+            saveFileDialog.Filter = "PNG File(*.png)|*.png";
+            if (saveFileDialog.ShowDialog() == DialogResult.OK) File.Move("tmpDendogramm.png", saveFileDialog.FileName);
+        }
+
+        /// <summary>
+        /// Handles the Click event of the exportClusterTableToolStripMenuItem control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
+        private void exportClusterTableToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var saveFileDialog = new SaveFileDialog();
+            saveFileDialog.Title = "Сохранить как...";
+            saveFileDialog.Filter = "CSV File(*.csv)|*.csv";
+            if (saveFileDialog.ShowDialog() == DialogResult.OK) File.Move("tmpTable.csv", saveFileDialog.FileName);
+        }
+
+        /// <summary>
+        /// Handles the Click event of the exportClusterOverviewToolStripMenuItem control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
+        private void exportClusterOverviewToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var saveFileDialog = new SaveFileDialog();
+            saveFileDialog.Title = "Сохранить как...";
+            saveFileDialog.Filter = "CSV File(*.csv)|*.csv";
+            if (saveFileDialog.ShowDialog() == DialogResult.OK) File.Move("tmpOverview.csv", saveFileDialog.FileName);
+        }
+
+        #endregion
+
+        #region Menu - Clusterization        
+        /// <summary>
+        /// Handles the Click event of the clusterizeToolStripMenuItem control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
+        private void clusterizeToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            // shows form
+            var clusterizeForm = new ClusterizeForm();
+            clusterizeForm.ShowDialog();
+
+            if (Tools.Data != null && clusterizeForm.isParametersSelected)
+            {
+                // updates data
+                Tools.Data.UpdateRows();
+
+                // get clusterset
+                var _clusters = Tools.Data.GetClusterSet(Tools.isChosen);
+                Tools.Clusters = _clusters;
+
+                // backups clusters before normalization
+                _dataPointsBeforeNormalization = new List<DataPoint>();
+                for (var i = 0; i < _clusters.ClustersList.Count; i++)
+                {
+                    _dataPointsBeforeNormalization.Add(
+                        new DataPoint(new List<double>(_clusters[i].DataPoints[0].Points)));
+                    _dataPointsBeforeNormalization[i].ID = i;
+                }
+
+                // normalize clusters
+                _clusters.Normalize(clusterizeForm.normalizeMethod);
+                var agnes = new Agnes(_clusters,
+                    clusterizeForm.distanceMetric, clusterizeForm.strategy);
+
+                // execute clustering
+                Tools.Clusters = agnes.ExecuteClustering(clusterizeForm.countOfClusters);
+
+                // builds components
+                BuildTreeView();
+                BuildResultTable();
+                tabControl.SelectTab(1);
+
+                // enables functions
+                buildDendrogramToolStripMenuItem.Enabled = true;
+                showClusterOverviewToolStripMenuItem.Enabled = true;
+                exportToolStripMenuItem.Enabled = true;
+            }
+        }
+
+
+        /// <summary>
+        /// Handles the Click event of the buildDendrogramToolStripMenuItem control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
+        private void buildDendrogramToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (Tools.Clusters != null)
+            {
+                // show form
+                var dendrogramFrm = new DendrogramForm();
+
+                // setup form
+                //dendrogramFrm._clusters = Tools.Clusters;
+                dendrogramFrm.Setup();
+                dendrogramFrm.ShowDialog();
+                exportClusterDendogrammToolStripMenuItem.Enabled = true;
+            }
+        }
+
+        /// <summary>
+        /// Handles the Click event of the showClusterOverviewToolStripMenuItem control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
+        private void showClusterOverviewToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+
+            if (Tools.Clusters != null)
+            {
+                // shows form
+                var statisticsForm = new StatisticsForm();
+
+                // setup form
+                statisticsForm.contentsHeadings = Tools.Data.GetChosenDataPointNames(Tools.isChosen);
+                statisticsForm._clusters = new ClusterSet();
+                statisticsForm._clusters.ClustersList = Tools.Clusters.ClustersList.GetRange(0, Tools.Clusters.Count);
+                statisticsForm._clusters.ClustersList.ForEach(x => RestoreClusterSet(x));
+                statisticsForm.Setup();
+                statisticsForm.ShowDialog();
+                exportClusterOverviewToolStripMenuItem.Enabled = true;
+            }
+        }
+        #endregion
+
+        #region Menu - About        
+        /// <summary>
+        /// Handles the Click event of the aboutToolStripMenuItem control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
         private void aboutToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            AboutBox aboutBox = new AboutBox();
+            var aboutBox = new AboutBox();
             aboutBox.ShowDialog();
         }
 
 
         #endregion
 
-        private void dataGridView_DataSourceChanged(object sender, EventArgs e)
+        #region DataTableGridView
+
+        /// <summary>
+        /// Handles the DataError event of the dataTableGridView control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="DataGridViewDataErrorEventArgs"/> instance containing the event data.</param>
+        private void dataTableGridView_DataError(object sender, DataGridViewDataErrorEventArgs e)
         {
-            //for (int i = 0; i < dataGridView.ColumnCount; i++)
-            //{
-            //    dataGridView.Columns[i].SortMode = DataGridViewColumnSortMode.NotSortable;
-            //}
+            e.ThrowException = false;
+            e.Cancel = false;
+            throw new CustomException("Введено не корректное значение.", "Ошибка при редактировании таблицы");
         }
 
-        private void показатьСтатисикуКласстераToolStripMenuItem_Click(object sender, EventArgs e)
+        /// <summary>
+        /// Handles the DefaultValuesNeeded event of the dataTableGridView control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="DataGridViewRowEventArgs"/> instance containing the event data.</param>
+        private void dataTableGridView_DefaultValuesNeeded(object sender, DataGridViewRowEventArgs e)
         {
-            StatisticsForm statisticsForm = new StatisticsForm();
-            statisticsForm.contentsHeadings = Tools.GetChosenDataPointNames(isChosen);
-            statisticsForm._clusters = _clusters;
-            statisticsForm.Setup();
-            statisticsForm.ShowDialog();
+            int i;
+            for (i = 0; i < Tools.Data.StringHeadings.Length; i++)
+                e.Row.Cells[i].Value = "Text";
+            for (; i < Tools.Data.FieldsCount; i++)
+                e.Row.Cells[i].Value = 0.0;
         }
+
+        /// <summary>
+        /// Handles the RowPostPaint event of the dataTableGridView control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="DataGridViewRowPostPaintEventArgs"/> instance containing the event data.</param>
+        private void dataTableGridView_RowPostPaint(object sender, DataGridViewRowPostPaintEventArgs e)
+        {
+            // add indexes of rows
+            using (var b = new SolidBrush(dataTableGridView.RowHeadersDefaultCellStyle.ForeColor))
+            {
+                e.Graphics.DrawString((e.RowIndex + 1).ToString(), e.InheritedRowStyle.Font, b,
+                    e.RowBounds.Location.X + 10, e.RowBounds.Location.Y + 4);
+            }
+        }
+
+        /// <summary>
+        /// Handles the DataSourceChanged event of the dataTableGridView control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
+        private void dataTableGridView_DataSourceChanged(object sender, EventArgs e)
+        {
+            for (var i = 0; i < dataTableGridView.ColumnCount; i++) dataTableGridView.Columns[i].SortMode = DataGridViewColumnSortMode.NotSortable;
+        }
+        #endregion
+
+        #region ClusterTableGridView        
+        /// <summary>
+        /// Handles the DataSourceChanged event of the clusterTableGridView control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
+        private void clusterTableGridView_DataSourceChanged(object sender, EventArgs e)
+        {
+            for (var i = 0; i < clusterTableGridView.ColumnCount; i++) clusterTableGridView.Columns[i].SortMode = DataGridViewColumnSortMode.NotSortable;
+        }
+
+        /// <summary>
+        /// Handles the RowPostPaint event of the clusterTableGridView control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="DataGridViewRowPostPaintEventArgs"/> instance containing the event data.</param>
+        private void clusterTableGridView_RowPostPaint(object sender, DataGridViewRowPostPaintEventArgs e)
+        {
+            using (var b = new SolidBrush(clusterTableGridView.RowHeadersDefaultCellStyle.ForeColor))
+            {
+                e.Graphics.DrawString((e.RowIndex + 1).ToString(), e.InheritedRowStyle.Font, b,
+                    e.RowBounds.Location.X + 10, e.RowBounds.Location.Y + 4);
+            }
+        }
+
+        #endregion
+
+        #region ToolStrip        
+        /// <summary>
+        /// Handles the Click event of the filterButton control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
+        private void filterButton_Click(object sender, EventArgs e)
+        {
+            if (Tools.Data != null)
+                Tools.Data.Filter(filterExpressionTextBox.Text, filteredColumnSelectComboBox.SelectedIndex,
+                    operandSelectComboBox.SelectedIndex);
+        }
+
+        /// <summary>
+        /// Handles the Click event of the sortByAZButton control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
+        private void sortByAZButton_Click(object sender, EventArgs e)
+        {
+            if (Tools.Data != null)
+                Tools.Data.Sort(sortColumnSelectComboBox.SelectedIndex, true);
+        }
+
+        /// <summary>
+        /// Handles the Click event of the sortByZAButton control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
+        private void sortByZAButton_Click(object sender, EventArgs e)
+        {
+            if (Tools.Data != null)
+                Tools.Data.Sort(sortColumnSelectComboBox.SelectedIndex, false);
+        }
+
+        /// <summary>
+        /// Handles the Click event of the undoButton control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
+        private void undoButton_Click(object sender, EventArgs e)
+        {
+            if (Tools.Data != null)
+                Tools.Data.Undo();
+        }
+
+        /// <summary>
+        /// Handles the Click event of the redoButton control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
+        private void redoButton_Click(object sender, EventArgs e)
+        {
+            if (Tools.Data != null)
+                Tools.Data.Redo();
+        }
+
+        /// <summary>
+        /// Handles the SelectedIndexChanged event of the filteredColumnSelectComboBox control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
+
+        private void filteredColumnSelectComboBox_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            var selectedIndex = ((ToolStripComboBox)sender).SelectedIndex;
+            if (selectedIndex >= Tools.StringDataHeadings.Length && Tools.Data != null)
+            {
+                operandSelectComboBox.Items.Clear();
+                operandSelectComboBox.Items.Add("=");
+                operandSelectComboBox.Items.Add(">=");
+                operandSelectComboBox.Items.Add("<=");
+                operandSelectComboBox.Items.Add(">");
+                operandSelectComboBox.Items.Add("<");
+                operandSelectComboBox.SelectedIndex = 0;
+            }
+            else if (selectedIndex < Tools.StringDataHeadings.Length && Tools.Data != null)
+            {
+                operandSelectComboBox.Items.Clear();
+                operandSelectComboBox.Items.Add("=");
+                operandSelectComboBox.SelectedIndex = 0;
+            }
+        }
+
+
+        #endregion
+
+        #region ClusteringToolStrip        
+        /// <summary>
+        /// Handles the Click event of the searchButton control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
+        private void searchButton_Click(object sender, EventArgs e)
+        {
+            foreach (var row in clusterTableGridView.Rows.Cast<DataGridViewRow>())
+            {
+                row.Cells[0].Style.BackColor = Color.AliceBlue;
+                if (((string)row.Cells[0].Value).Contains(searchExpressionTextBox.Text))
+                    row.Cells[0].Style.BackColor = Color.Aqua;
+            }
+        }
+
+        #endregion
+
+        #region MainForm        
+        /// <summary>
+        /// Handles the FormClosing event of the MainForm control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="FormClosingEventArgs"/> instance containing the event data.</param>
+        private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            DeleteTempFiles();
+        }
+        #endregion
+
+        #endregion
+
+
     }
 }

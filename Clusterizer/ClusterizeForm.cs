@@ -11,58 +11,59 @@ using System.Windows.Forms;
 namespace Clusterizer
 {
     /// <summary>
-    /// Класс выбора опции кластеризации
+    /// Form for selecting parameters of clustering
     /// </summary>
     /// <seealso cref="System.Windows.Forms.Form" />
     public partial class ClusterizeForm : Form
     {
-        #region Поля        
+        #region Fields       
 
         /// <summary>
-        /// Массив выборов
+        /// The merge strategy
         /// </summary>
-        internal bool[] isChosen;
+        internal MergeStrategy strategy;
 
         /// <summary>
-        /// Стратегия обьеденения
+        /// The distance metric
         /// </summary>
-        internal ClusterDistance.Strategy strategy;
+        internal DistanceMetric distanceMetric;
 
         /// <summary>
-        /// Мера расстояния
+        /// The normalize method
         /// </summary>
-        internal Distance.DistanceMetric distanceMetric;
+        internal NormalizeMethod normalizeMethod;
 
         /// <summary>
-        /// Заголовки показателей
+        /// The count of clusters
         /// </summary>
-        internal string[] pointsNames;
+        internal int countOfClusters = 1;
 
-        internal CSVData _data;
-        internal int k = 1;
+        /// <summary>
+        /// Indicates if parameters selected
+        /// </summary>
+        internal bool isParametersSelected;
+
+        /// <summary>
+        /// Indicates if TreeView busy
+        /// </summary>
+        private bool isTreeViewBusy;
 
         #endregion
 
         #region Конструктор        
 
         /// <summary>
-        /// Конструктор без параметров класса <see cref="ClusterizeForm"/>.
+        /// Initializes a new instance of the <see cref="ClusterizeForm"/> class.
         /// </summary>
         public ClusterizeForm()
         {
             InitializeComponent();
-        }
 
-        /// <summary>
-        /// Конструктор без параметров класса <see cref="ClusterizeForm"/>.
-        /// </summary>
-        /// <param name="points">Заголовки точек</param>
-        public ClusterizeForm(string[] points)
-        {
-            InitializeComponent();
-            pointsNames = points;
-            treeView1.CheckBoxes = true;
-            for (int i = 0; i < Tools.GroupCount; i++)
+            isParametersSelected = false;
+            pointsSelectTreeView.CheckBoxes = true;
+
+            // Loads Parameters from defined configuration
+            for (int i = 0; i < Tools.GroupNames.Length; i++)
             {
                 TreeNode rootNode = new TreeNode(Tools.GroupNames[i]);
                 rootNode.Checked = true;
@@ -73,66 +74,137 @@ namespace Clusterizer
                     node.Checked = true;
                 }
 
-                treeView1.Nodes.Add(rootNode);
+                pointsSelectTreeView.Nodes.Add(rootNode);
             }
 
-            comboBox1.SelectedIndex = 0;
-            comboBox2.SelectedIndex = 0;
+            distanceSelectComboBox.SelectedIndex = 0;
+            strategySelectComboBox.SelectedIndex = 0;
+            normalizeMethodSelectComboBox.SelectedIndex = 0;
         }
-
         #endregion
 
+        #region Events        
         /// <summary>
-        /// Действие при нажатии на кнопку clusteringButton
-        /// </summary>      
-        /// <param name="sender">Сама кнопка</param>
-        /// <param name="e">Аргумент события <see cref="EventArgs"/></param>
-        private void clusteringButton_Click(object sender, EventArgs e)
+        /// Handles the Click event of the doClusteringButton control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
+        /// <exception cref="Clusterizer.CustomException">
+        /// Введите правилное количество кластеров. - Ошибка при вводе числа кластеров
+        /// or
+        /// Не было выбрано не одного показателя. - Ощибка при выборе показателей
+        /// </exception>
+        private void doClusteringButton_Click(object sender, EventArgs e)
         {
-            distanceMetric = (Distance.DistanceMetric) comboBox1.SelectedIndex;
-            strategy = (ClusterDistance.Strategy) comboBox2.SelectedIndex;
+            // Gets selected parameters of clustering
+            distanceMetric = (DistanceMetric) distanceSelectComboBox.SelectedIndex;
+            strategy = (MergeStrategy) strategySelectComboBox.SelectedIndex;
+            normalizeMethod = (NormalizeMethod) normalizeMethodSelectComboBox.SelectedIndex;
 
+            // checks for correct cluster number
             int tmp;
-            if (int.TryParse(textBox1.Text, out tmp) && tmp > 0 && tmp < _data.Rows.Count)
-            {
-                k = tmp;
-            }
+            if (int.TryParse(clusterCountTextBox.Text, out tmp) && tmp > 0 && tmp < Tools.Data.Rows.Count)
+                countOfClusters = tmp;
             else
-            {
-                MessageBox.Show("Ощибка при вводе", "Введите правилное количество кластеров", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
-            }
+                throw new CustomException("Введите правилное количество кластеров.", "Ошибка при вводе числа кластеров");
 
-            isChosen = new bool[Tools.DataPointCount];
+            // gets selected datapoints
+            var _isChosen = new bool[Tools.NumericDataHeadings.Length];
+            bool isAllFalse = true;
             int ind = 0;
-            for (int i = 0; i < treeView1.Nodes.Count; i++)
+            for (int i = 0; i < pointsSelectTreeView.Nodes.Count; i++)
             {
-                for (int j = 0; j < treeView1.Nodes[i].Nodes.Count; j++)
+                for (int j = 0; j < pointsSelectTreeView.Nodes[i].Nodes.Count; j++)
                 {
-                    isChosen[ind] = treeView1.Nodes[i].Nodes[j].Checked;
+                    _isChosen[ind] = pointsSelectTreeView.Nodes[i].Nodes[j].Checked;
+                    if (isAllFalse)
+                        isAllFalse = !_isChosen[ind];
                     ind++;
                 }
             }
 
+            // check if no datapoint is selected
+            if (isAllFalse)
+                throw new CustomException("Не было выбрано не одного показателя.", "Ощибка при выборе показателей");
+
+            Tools.isChosen = _isChosen;
+            isParametersSelected = true;
             this.Close();
         }
 
-        bool busy = false;
-
-        private void treeView1_AfterCheck(object sender, TreeViewEventArgs e)
+        /// <summary>
+        /// Handles the Click event of the calculateClusterCountButton control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
+        /// <exception cref="Clusterizer.CustomException">Не было выбрано ни одного показателя. - Ощибка при выборе показателей</exception>
+        private void calculateClusterCountButton_Click(object sender, EventArgs e)
         {
-            if (busy) return;
-            busy = true;
+            // gets selected parameters of clustering
+            distanceMetric = (DistanceMetric)distanceSelectComboBox.SelectedIndex;
+            strategy = (MergeStrategy)strategySelectComboBox.SelectedIndex;
+            normalizeMethod = (NormalizeMethod)normalizeMethodSelectComboBox.SelectedIndex;
+
+            // gets selected datapoints
+            var _isChosen = new bool[Tools.NumericDataHeadings.Length];
+            bool isAllFalse = true;
+            int ind = 0;
+            for (int i = 0; i < pointsSelectTreeView.Nodes.Count; i++)
+            {
+                for (int j = 0; j < pointsSelectTreeView.Nodes[i].Nodes.Count; j++)
+                {
+                    _isChosen[ind] = pointsSelectTreeView.Nodes[i].Nodes[j].Checked;
+                    if (isAllFalse)
+                        isAllFalse = !_isChosen[ind];
+                    ind++;
+                }
+            }
+
+            // check if no datapoint is selected
+            if (isAllFalse)
+                throw new CustomException("Не было выбрано ни одного показателя.", "Ощибка при выборе показателей");
+
+
+            // gets cluster set from data
+            var _clusters = Tools.Data.GetClusterSet(Tools.isChosen);
+            _clusters.Normalize(normalizeMethod);
+
+            // executes clustering for determining recomended count of clusters
+            Agnes agnes = new Agnes(_clusters,
+                distanceMetric, strategy);
+            agnes.ExecuteClustering(2, true);
+
+            // gets recomended count of clusters
+            countOfClusters = agnes.GetRecommendedCountOfClusters();
+            clusterCountTextBox.Text = $"{countOfClusters}";
+        }
+
+        /// <summary>
+        /// Handles the AfterCheck event of the pointsSelectTreeView control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="TreeViewEventArgs"/> instance containing the event data.</param>
+        private void pointsSelectTreeView_AfterCheck(object sender, TreeViewEventArgs e)
+        {
+            if (isTreeViewBusy) return;
+            isTreeViewBusy = true;
             try
             {
                 checkNodes(e.Node, e.Node.Checked);
             }
             finally
             {
-                busy = false;
+                isTreeViewBusy = false;
             }
         }
+        #endregion
 
+        #region Methods        
+        /// <summary>
+        /// Checks the nodes.
+        /// </summary>
+        /// <param name="node">The node.</param>
+        /// <param name="check">if set to <c>true</c> [check].</param>
         private void checkNodes(TreeNode node, bool check)
         {
             foreach (TreeNode child in node.Nodes)
@@ -141,102 +213,6 @@ namespace Clusterizer
                 checkNodes(child, check);
             }
         }
-
-        private void button1_Click(object sender, EventArgs e)
-        {
-            // undefined if only one cluster
-            double maxCoeff = double.MinValue;
-            int maxIndex = 0;
-            double currentCoeff = 0;
-
-            distanceMetric = (Distance.DistanceMetric)comboBox1.SelectedIndex;
-            strategy = (ClusterDistance.Strategy)comboBox2.SelectedIndex;
-
-            isChosen = new bool[Tools.DataPointCount];
-            int ind = 0;
-            for (int i = 0; i < treeView1.Nodes.Count; i++)
-            {
-                for (int j = 0; j < treeView1.Nodes[i].Nodes.Count; j++)
-                {
-                    isChosen[ind] = treeView1.Nodes[i].Nodes[j].Checked;
-                    ind++;
-                }
-            }
-
-            Agnes agnes = new Agnes(_data.GetPatternMatrix(isChosen),
-                distanceMetric, strategy);
-            var _clusters = agnes.ExecuteClustering(1, true);
-
-
-            k = agnes.GetMaximumIndex();
-            textBox1.Text = $"{k}";
-            int a = 5;
-            //Agnes agnes = new Agnes(_data.GetPatternMatrix(clusterizeForm.isChosen),
-            //    clusterizeForm.distanceMetric, clusterizeForm.strategy);
-            //_clusters = agnes.ExecuteClustering(1);
-
-            //if (clusterSet.Count < 2) return double.NaN;
-
-            //// gets clusters' centroids and overall centroid
-            //var centroids = new List<TInstance>();
-            //Cluster<TInstance> allPoints = null;
-            //for (var i = 0; i < clusterSet.Count; i++)
-            //{
-            //    allPoints = allPoints == null
-            //        ? new Cluster<TInstance>(clusterSet[i])
-            //        : new Cluster<TInstance>(allPoints, clusterSet[i], 0);
-            //    centroids.Add(this._centroidFunc(clusterSet[i]));
-            //}
-
-            //var overallCentroid = this._centroidFunc(allPoints);
-
-            //var betweenVar = 0d;
-            //var withinVar = 0d;
-            //for (var i = 0; i < clusterSet.Count; i++)
-            //{
-            //    // updates overall between-cluster variance
-            //    var betweenDist = this.DissimilarityMetric.Calculate(centroids[i], overallCentroid);
-            //    betweenVar += betweenDist * betweenDist * clusterSet[i].Count;
-
-            //    // updates overall within-cluster variance
-            //    foreach (var instance in clusterSet[i])
-            //    {
-            //        var withinDist = this.DissimilarityMetric.Calculate(instance, centroids[i]);
-            //        withinVar += withinDist * withinDist;
-            //    }
-            //}
-
-            //return Math.Abs(withinVar) < double.Epsilon
-            //    ? double.NaN
-            //    : betweenVar * (allPoints.Count - clusterSet.Count) / (withinVar * (clusterSet.Count - 1));
-        }
-
-        static IList<double> FindPeaks(IList<double> values, int rangeOfPeaks)
-        {
-            List<double> peaks = new List<double>();
-
-            int checksOnEachSide = rangeOfPeaks / 2;
-            for (int i = 0; i < values.Count; i++)
-            {
-                double current = values[i];
-                IEnumerable<double> range = values;
-                if (i > checksOnEachSide)
-                    range = range.Skip(i - checksOnEachSide);
-                range = range.Take(rangeOfPeaks);
-                if (current == range.Max())
-                    peaks.Add(current);
-            }
-            return peaks;
-        }
-
-        private void textBox1_TextChanged(object sender, EventArgs e)
-        {
-
-        }
-
-        private void comboBox1_SelectedIndexChanged(object sender, EventArgs e)
-        {
-
-        }
+        #endregion
     }
 }

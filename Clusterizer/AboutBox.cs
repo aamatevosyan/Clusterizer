@@ -10,13 +10,13 @@ using System.Windows.Forms;
 namespace Clusterizer
 {
     /// <summary>
-    /// Класс для представления окна о программе
+    /// About Box of Programm
     /// </summary>
     /// <seealso cref="System.Windows.Forms.Form" />
     partial class AboutBox : Form
     {
         /// <summary>
-        /// Конструктор без параметра для класса <see cref="AboutBox"/>.
+        /// Initializes a new instance of the <see cref="AboutBox"/> class.
         /// </summary>
         public AboutBox()
         {

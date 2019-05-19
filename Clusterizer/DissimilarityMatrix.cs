@@ -1,63 +1,63 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace Clusterizer
 {
     /// <summary>
-    /// Класс Матрицы различии
+    /// Data structure for presenting dissimilarity matrix
     /// </summary>
     public class DissimilarityMatrix
     {
-        #region Поля        
+        #region Поля                
         /// <summary>
-        /// Матрица различии
+        /// The distance matrix
         /// </summary>
-        private ConcurrentDictionary<ClusterPair, double> _distanceMatrix;
+        private Dictionary<ClusterPair, double> _distanceMatrix;
         #endregion
 
-        #region Конструктор        
+        #region Constructor                
         /// <summary>
-        /// Конструктор без параметров класса <see cref="DissimilarityMatrix"/>.
+        /// Initializes a new instance of the <see cref="DissimilarityMatrix"/> class.
         /// </summary>
         public DissimilarityMatrix()
         {
-            _distanceMatrix = new ConcurrentDictionary<ClusterPair, double>(new ClusterPair.EqualityComparer());
+            _distanceMatrix = new Dictionary<ClusterPair, double>(new ClusterPair.EqualityComparer());
         }
         #endregion
 
-        #region Методы        
+        #region Методы                
         /// <summary>
-        /// Добавляет растояние между парой класстеров в матрицу
+        /// Adds the cluster pair and distance.
         /// </summary>
-        /// <param name="clusterPair">Пара кластеров</param>
-        /// <param name="distance">Растояние</param>
+        /// <param name="clusterPair">The cluster pair.</param>
+        /// <param name="distance">The distance.</param>
         public void AddClusterPairAndDistance(ClusterPair clusterPair, double distance)
         {
-            _distanceMatrix.TryAdd(clusterPair, distance);
+            _distanceMatrix.Add(clusterPair, distance);
         }
 
         /// <summary>
-        /// Удаляет расстояние между парой кластеров из матрицы
+        /// Removes the cluster pair.
         /// </summary>
-        /// <param name="clusterPair">Пара кластеров</param>
+        /// <param name="clusterPair">The cluster pair.</param>
         public void RemoveClusterPair(ClusterPair clusterPair)
         {
-            double outvalue;
-
             if (_distanceMatrix.ContainsKey(clusterPair))
-                _distanceMatrix.TryRemove(clusterPair, out outvalue);
+                _distanceMatrix.Remove(clusterPair);
             else
-                _distanceMatrix.TryRemove(new ClusterPair(clusterPair.Cluster2, clusterPair.Cluster1), out outvalue);
+                _distanceMatrix.Remove(new ClusterPair(clusterPair.Cluster2, clusterPair.Cluster1));
         }
-     
+
         /// <summary>
-        /// Вовзращает пару кластеров с минимальным расстоянием
+        /// Gets the closest cluster pair.
         /// </summary>
+        /// <returns></returns>
         public ClusterPair GetClosestClusterPair()
         {
             double minDistance = double.MaxValue;
-            ClusterPair closestClusterPair = new ClusterPair();
+            ClusterPair closestClusterPair = null;
 
             foreach (var item in _distanceMatrix)
             {
@@ -71,9 +71,9 @@ namespace Clusterizer
             return closestClusterPair;
         }
 
-     
+
         /// <summary>
-        /// Возвращает расстояние пары класстеров
+        /// Returns the cluster pair distance.
         /// </summary>
         /// <param name="clusterPair">The cluster pair.</param>
         /// <returns></returns>
@@ -84,32 +84,8 @@ namespace Clusterizer
             if (_distanceMatrix.ContainsKey(clusterPair))
                 clusterPairDistance = _distanceMatrix[clusterPair];
             else
-                clusterPairDistance = _distanceMatrix[new ClusterPair(clusterPair.Cluster2, clusterPair.Cluster1)]; // Матрица симметричная но кластеры могут поменяться местами
+                clusterPairDistance = _distanceMatrix[new ClusterPair(clusterPair.Cluster2, clusterPair.Cluster1)]; // pairs can be swapped
             return clusterPairDistance;
-        }
-
-        public double ReturnLowestDistanceOld()
-        {
-            var distanceList = _distanceMatrix.ToList();
-            distanceList.Sort((x, y) => x.Value.CompareTo(y.Value)); // it is necessary to find a more performatic way to find this value (very important)
-            return distanceList[0].Value;
-        }
-
-        // get the lowest distance in distance matrix
-        public double GetLowestDistance()
-        {
-            double minDistance = double.MaxValue;
-            ClusterPair closestClusterPair = new ClusterPair();
-
-            foreach (var item in _distanceMatrix)
-            {
-                if (item.Value < minDistance)
-                {
-                    minDistance = item.Value;
-                }
-            }
-
-            return minDistance;
         }
         #endregion
     }
