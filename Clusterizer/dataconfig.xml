@@ -1,0 +1,15 @@
+﻿<?xml version="1.0"?>
+<Configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <StringHeadings>
+    <string>Название</string>
+  </StringHeadings>
+  <NumericHeadings>
+    <string></string>
+  </NumericHeadings>
+  <GroupNames>
+    <string></string>
+  </GroupNames>
+  <GroupItemsCount>
+    <int></int>
+  </GroupItemsCount>
+</Configuration>

@@ -43,6 +43,7 @@ namespace Clusterizer
             InitializeComponent();
             ResetComponents();
             ResetData();
+            Tools.Load();
         }
 
         #endregion
@@ -256,6 +257,7 @@ namespace Clusterizer
                     var filePath = openFileDialog.FileName;
                     var data = new CSVData(filePath);
                     data.CreateDataTable();
+                    ResetData();
                     Tools.Data = data;
                     LoadData();
                 }
@@ -531,10 +533,13 @@ namespace Clusterizer
         private void dataTableGridView_RowPostPaint(object sender, DataGridViewRowPostPaintEventArgs e)
         {
             // add indexes of rows
-            using (var b = new SolidBrush(dataTableGridView.RowHeadersDefaultCellStyle.ForeColor))
+            if (!e.IsLastVisibleRow)
             {
-                e.Graphics.DrawString((e.RowIndex + 1).ToString(), e.InheritedRowStyle.Font, b,
-                    e.RowBounds.Location.X + 10, e.RowBounds.Location.Y + 4);
+                using (var b = new SolidBrush(dataTableGridView.RowHeadersDefaultCellStyle.ForeColor))
+                {
+                    e.Graphics.DrawString((e.RowIndex + 1).ToString(), e.InheritedRowStyle.Font, b,
+                        e.RowBounds.Location.X + 10, e.RowBounds.Location.Y + 4);
+                }
             }
         }
 

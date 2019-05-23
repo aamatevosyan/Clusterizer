@@ -9,7 +9,7 @@ namespace Clusterizer
     /// <summary>
     /// Class for working with input data
     /// </summary>
-    class CSVData
+    public class CSVData
     {
         #region Свойства        
 
@@ -320,17 +320,6 @@ namespace Clusterizer
         }
 
         #endregion
-
-
-
-
-
-
-
-
-
-
-
-
+   
     }
 }

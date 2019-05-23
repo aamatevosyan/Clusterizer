@@ -13,7 +13,7 @@ namespace Clusterizer
     /// About Box of Programm
     /// </summary>
     /// <seealso cref="System.Windows.Forms.Form" />
-    partial class AboutBox : Form
+    public partial class AboutBox : Form
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="AboutBox"/> class.

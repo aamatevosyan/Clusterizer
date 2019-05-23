@@ -9,7 +9,7 @@ namespace Clusterizer
     /// <summary>
     /// Data structure for one line of CSV File
     /// </summary>
-    class CSVRow
+    public class CSVRow
     {
         /// <summary>
         /// Gets or sets the fields.

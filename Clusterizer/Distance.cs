@@ -51,7 +51,7 @@ namespace Clusterizer
                 case DistanceMetric.ChebyshevDistance: // calculates by using Chebyshev Distance
                     for (var i = 0; i < x.Count; i++)
                     {
-                        diff = x[i] - y[i];
+                        diff = Math.Abs(x[i] - y[i]);
                         distance = distance > diff ? distance : diff;
                     }
 

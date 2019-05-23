@@ -10,7 +10,7 @@ namespace Clusterizer
     /// </summary>
     public class DissimilarityMatrix
     {
-        #region Поля                
+        #region Fields                
         /// <summary>
         /// The distance matrix
         /// </summary>
@@ -27,7 +27,7 @@ namespace Clusterizer
         }
         #endregion
 
-        #region Методы                
+        #region Methods           
         /// <summary>
         /// Adds the cluster pair and distance.
         /// </summary>

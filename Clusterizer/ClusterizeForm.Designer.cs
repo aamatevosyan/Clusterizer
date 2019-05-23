@@ -140,7 +140,7 @@
             this.calculateClusterCountButton.Name = "calculateClusterCountButton";
             this.calculateClusterCountButton.Size = new System.Drawing.Size(401, 23);
             this.calculateClusterCountButton.TabIndex = 10;
-            this.calculateClusterCountButton.Text = "Рассчитать число рекомендуемое число класстеров";
+            this.calculateClusterCountButton.Text = "Рассчитать рекомендуемое число класстеров";
             this.calculateClusterCountButton.UseVisualStyleBackColor = true;
             this.calculateClusterCountButton.Click += new System.EventHandler(this.calculateClusterCountButton_Click);
             // 

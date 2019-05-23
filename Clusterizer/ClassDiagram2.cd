@@ -1,0 +1,76 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Class Name="Clusterizer.Agnes">
+    <Position X="0.75" Y="0.5" Width="2.5" />
+    <TypeIdentifier>
+      <HashCode>QAAAAAAgAAAAAAAACgAAIkEACAAAAAAAAAAAGAAgAAg=</HashCode>
+      <FileName>Agnes.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Clusterizer.Cluster">
+    <Position X="3.5" Y="0.5" Width="2" />
+    <TypeIdentifier>
+      <HashCode>BABCAAAAAAIAkIIEAAAAAAAAAAAAAAAAAAAAACAAABA=</HashCode>
+      <FileName>Cluster.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Clusterizer.ClusterPair">
+    <Position X="3.75" Y="4.25" Width="1.5" />
+    <NestedTypes>
+      <Class Name="Clusterizer.ClusterPair.EqualityComparer" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>ClusterPair.cs</NewMemberFileName>
+        </TypeIdentifier>
+        <Lollipop Position="0.2" />
+      </Class>
+    </NestedTypes>
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAAAAAABAA=</HashCode>
+      <FileName>ClusterPair.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Clusterizer.ClusterSet" BaseTypeListCollapsed="true">
+    <Position X="5.75" Y="0.5" Width="1.75" />
+    <TypeIdentifier>
+      <HashCode>AAEAAAIAAAAAABIgGAAAAAUAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>ClusterSet.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="Clusterizer.CSVData">
+    <Position X="0.75" Y="4.75" Width="2.25" />
+    <TypeIdentifier>
+      <HashCode>gAQAAAgQEAAABEAAAAAQAAIJBJAEAgAAYopAAAAAAAA=</HashCode>
+      <FileName>CSVData.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Clusterizer.CSVRow">
+    <Position X="5.75" Y="9" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAACAAAAAAAAAAAAAAAAAAAAAAAgAA=</HashCode>
+      <FileName>CSVRow.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Clusterizer.DataPoint">
+    <Position X="5.75" Y="3.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAICAAAAAAAAgAAACAAAAAQAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>DataPoint.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Clusterizer.DissimilarityMatrix">
+    <Position X="5.75" Y="6.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAqAAAAAAAAAAAAAAAAAAABAAAAABAA=</HashCode>
+      <FileName>DissimilarityMatrix.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Clusterizer.Tools">
+    <Position X="3.5" Y="6.5" Width="2" />
+    <TypeIdentifier>
+      <HashCode>ABCAgISAAAAAAAAAAAAAAAAARQAEQBAAACAAAACEAAA=</HashCode>
+      <FileName>Tools.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>

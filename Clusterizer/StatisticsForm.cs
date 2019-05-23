@@ -155,8 +155,9 @@ namespace Clusterizer
                 StreamWriter streamWriter = new StreamWriter(fileStream);
                 for (int i = 0; i < Clusters.Count; i++)
                 {
-                    var tmpContent = Clusters[i].Centroid.Points.ToList();
-                    tmpContent.Add(Clusters[i].QuantityOfDataPoints);
+                    var tmpContent = Clusters[i].Centroid.Points.Select(x => $"{x}").ToList();
+                    tmpContent.Insert(0, $"Clusters{Clusters[i].Id}");
+                    tmpContent.Add($"{Clusters[i].QuantityOfDataPoints}");
                     streamWriter.WriteLine(string.Join(";", tmpContent));
                 }
                 streamWriter.Flush();

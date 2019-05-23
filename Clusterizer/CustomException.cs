@@ -10,7 +10,7 @@ namespace Clusterizer
     /// Custom exception for showing errors via MessageBox
     /// </summary>
     /// <seealso cref="System.Exception" />
-    class CustomException : Exception
+    public class CustomException : Exception
     {
         /// <summary>
         /// Gets or sets the text.

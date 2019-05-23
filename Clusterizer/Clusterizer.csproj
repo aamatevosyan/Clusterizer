@@ -38,6 +38,10 @@
   <PropertyGroup>
     <ApplicationIcon>baseline_grain_black_48dp.ico</ApplicationIcon>
   </PropertyGroup>
+  <PropertyGroup />
+  <PropertyGroup>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -69,6 +73,7 @@
     </Compile>
     <Compile Include="ClusterPair.cs" />
     <Compile Include="ClusterSet.cs" />
+    <Compile Include="Configuration.cs" />
     <Compile Include="CSVData.cs" />
     <Compile Include="CSVRow.cs" />
     <Compile Include="CustomException.cs" />
@@ -123,7 +128,11 @@
     <EmbeddedResource Include="StatisticsForm.resx">
       <DependentUpon>StatisticsForm.cs</DependentUpon>
     </EmbeddedResource>
+    <None Include="app.manifest">
+      <SubType>Designer</SubType>
+    </None>
     <None Include="ClassDiagram1.cd" />
+    <None Include="ClassDiagram2.cd" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
@@ -133,6 +142,7 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
+    <None Include="samples\data.csv" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
@@ -184,6 +194,13 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="baseline_grain_black_48dp.ico" />
+    <Content Include="samples\dataconfig.xml" />
+    <EmbeddedResource Include="dataconfig.xml">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <Content Include="defaultdataconfig.xml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <None Include="Resources\baseline_group_work_black_48dp.png" />
     <None Include="Resources\baseline_flip_to_front_black_48dp.png" />
     <None Include="Resources\baseline_search_black_18dp.png" />

@@ -9,10 +9,10 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTitle("Clusterizer")]
 [assembly: AssemblyDescription("Программа для кластеризации российских вузов по показателям их научно-образовательной деятельности на основе иерархического агломеративного метода")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("ВШЭ")]
+[assembly: AssemblyCompany("HSE")]
 [assembly: AssemblyProduct("Clusterizer")]
 [assembly: AssemblyCopyright("Copyright ©  2019")]
-[assembly: AssemblyTrademark("")]
+[assembly: AssemblyTrademark("HSE")]
 [assembly: AssemblyCulture("")]
 
 // Setting ComVisible to false makes the types in this assembly not visible
@@ -35,5 +35,5 @@ using System.Runtime.InteropServices;
 // [assembly: AssemblyVersion("1.0.*")]
 [assembly: AssemblyVersion("1.0.0.0")]
 [assembly: AssemblyFileVersion("1.0.0.0")]
-[assembly: NeutralResourcesLanguage("ru")]
+[assembly: NeutralResourcesLanguage("ru-RU")]
 
