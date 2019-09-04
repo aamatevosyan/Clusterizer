@@ -1,11 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.28307.489
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29215.179
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Clusterizer", "Clusterizer\Clusterizer.csproj", "{40B1AB29-5DED-4C91-B182-8C7EEF1C2F3B}"
-EndProject
-Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "ClusterizerSetup", "SetupWizard\SetupWizard.vdproj", "{6CA14BEC-3826-4AD3-93E7-5B607FA2EB33}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -17,8 +15,6 @@ Global
 		{40B1AB29-5DED-4C91-B182-8C7EEF1C2F3B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{40B1AB29-5DED-4C91-B182-8C7EEF1C2F3B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{40B1AB29-5DED-4C91-B182-8C7EEF1C2F3B}.Release|Any CPU.Build.0 = Release|Any CPU
-		{6CA14BEC-3826-4AD3-93E7-5B607FA2EB33}.Debug|Any CPU.ActiveCfg = Debug
-		{6CA14BEC-3826-4AD3-93E7-5B607FA2EB33}.Release|Any CPU.ActiveCfg = Release
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
